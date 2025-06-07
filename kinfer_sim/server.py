@@ -23,6 +23,7 @@ from kscale.web.utils import get_robots_dir, should_refresh_file
 from kinfer_sim.keyboard_listener import KeyboardListener
 from kinfer_sim.provider import ModelProvider
 from kinfer_sim.simulator import MujocoSimulator
+from kinfer_sim.reward_plotter import RewardPlotter
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,7 @@ class ServerConfig(tap.TypedArgs):
     save_path: str = tap.arg(default="logs", help="Path to save logs")
     save_video: bool = tap.arg(default=False, help="Save video")
     save_logs: bool = tap.arg(default=False, help="Save logs")
+    plot_rewards: bool = tap.arg(default=False, help="Enable real-time reward plotting")
 
     # Keyboard settings
     use_keyboard: bool = tap.arg(default=False, help="Use keyboard to control the robot")
@@ -119,6 +121,10 @@ class SimulationServer:
         self._reset_queue = reset_queue
         self._pause_queue = pause_queue
         self._is_paused = False
+        self._plot_rewards = config.plot_rewards
+
+        # Initialize reward plotter if enabled
+        self._reward_plotter = RewardPlotter(self.simulator._model) if self._plot_rewards else None
 
         self._video_writer: VideoWriter | None = None
         if self._save_video:
@@ -177,6 +183,10 @@ class SimulationServer:
         if self._save_logs:
             logs = []
 
+        # Start the reward plotter if enabled
+        if self._reward_plotter is not None:
+            await self._reward_plotter.start()
+
         try:
             while not self._stop_event.is_set():
                 loop_start_time = time.perf_counter()
@@ -198,6 +208,8 @@ class SimulationServer:
                     # handle sim reset command
                     if self._reset_queue is not None and not self._reset_queue.empty():
                         await self.simulator.reset()
+                        if self._reward_plotter is not None:
+                            await self._reward_plotter.reset()
                         self._reset_queue.get()
 
                     # Runs the simulation for one step.
@@ -208,6 +220,10 @@ class SimulationServer:
                     # Inference policy, offload blocking calls to the executor
                     output, carry = await loop.run_in_executor(None, model_runner.step, carry)
                     await loop.run_in_executor(None, model_runner.take_action, output)
+
+                    # Feed data to reward plotter if enabled
+                    if self._reward_plotter is not None:
+                        await self._reward_plotter.add_data(self.simulator._data, model_provider.arrays, model_provider.heading)
 
                     if logs is not None:
                         logs.append(model_provider.arrays.copy())
@@ -267,6 +283,8 @@ class SimulationServer:
         """Stop the simulation and cleanup resources asynchronously."""
         logger.info("Shutting down simulation...")
         self._stop_event.set()
+        if self._reward_plotter is not None:
+            await self._reward_plotter.stop()
         await self.simulator.close()
 
 
