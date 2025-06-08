@@ -263,7 +263,8 @@ class MujocoSimulator:
         # Initialize velocities and accelerations to zero
         if self._freejoint:
             self._data.qpos[:3] = np.array([0.0, 0.0, self._start_height])
-            self._data.qpos[3:7] = np.array([0.0, 0.0, 0.0, 1.0])
+            # self._data.qpos[3:7] = np.array([0.0, 0.0, 0.0, 1.0])
+            self._data.qpos[3:7] = np.array([1.0, 0.0, 0.0, 0.0])
             self._data.qpos[7:] = np.zeros_like(self._data.qpos[7:])
         else:
             self._data.qpos[:] = np.zeros_like(self._data.qpos)

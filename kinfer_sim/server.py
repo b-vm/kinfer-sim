@@ -208,6 +208,7 @@ class SimulationServer:
                     # handle sim reset command
                     if self._reset_queue is not None and not self._reset_queue.empty():
                         await self.simulator.reset()
+                        carry = model_runner.init()
                         if self._reward_plotter is not None:
                             await self._reward_plotter.reset()
                         self._reset_queue.get()
@@ -221,7 +222,16 @@ class SimulationServer:
                     output, carry = await loop.run_in_executor(None, model_runner.step, carry)
                     await loop.run_in_executor(None, model_runner.take_action, output)
 
-                    # Feed data to reward plotter if enabled
+                    # logging
+                    self.simulator._viewer.push_plot_metrics(
+                        scalars={f"{self.simulator._model.actuator(i).name}": x for i, x in enumerate(output)},
+                        group="actions"
+                    )
+                    for sub_obs in model_provider.arrays:
+                        self.simulator._viewer.push_plot_metrics(
+                            scalars={f"{sub_obs}_{i}": x for i, x in enumerate(model_provider.arrays[sub_obs])},
+                            group=sub_obs
+                        )
                     if self._reward_plotter is not None:
                         await self._reward_plotter.add_data(self.simulator._data, model_provider.arrays, model_provider.heading)
 
