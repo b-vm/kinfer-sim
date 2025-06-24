@@ -185,9 +185,9 @@ class ModelProvider(ModelProviderABC):
 
             # height
             elif key == '=':
-                self.command_array[3] += 0.1
+                self.command_array[3] += 0.05
             elif key == '-':
-                self.command_array[3] -= 0.1
+                self.command_array[3] -= 0.05
             
             # base orient
             elif key == 'r':
@@ -218,6 +218,8 @@ class ModelProvider(ModelProviderABC):
                 inputs[input_type] = self.get_joint_angular_velocities(metadata.joint_names)  # type: ignore[attr-defined]
             elif input_type == "quaternion":
                 inputs[input_type] = self.get_quaternion()
+            elif input_type == "initial_heading":
+                inputs[input_type] = self.get_initial_heading()
             elif input_type == "accelerometer":
                 inputs[input_type] = self.get_accelerometer()
             elif input_type == "gyroscope":
@@ -260,12 +262,15 @@ class ModelProvider(ModelProviderABC):
             -self.simulator._imu_quat_noise, self.simulator._imu_quat_noise, quat_array.shape
         )
 
-        # backspin by heading
-        heading_quat = euler_to_quat(np.array([0, 0, self.heading]))
-        quat_array = rotate_quat_by_quat(quat_array, heading_quat, inverse=True)
-        quat_array = ensure_quat_in_positive_hemisphere(quat_array)
         self.arrays["quaternion"] = quat_array
         return quat_array
+
+    def get_initial_heading(self) -> np.ndarray:
+        if self.heading == None: # lazy init heading after we are sure sim has been reset
+            sensor = self.simulator._data.sensor(self.quat_name)
+            quat_array = np.array(sensor.data, dtype=np.float32)
+            self.heading = quat_to_euler(quat_array)[2]
+        return np.array([self.heading], dtype=np.float32)
 
     def get_accelerometer(self) -> np.ndarray:
         sensor = self.simulator._data.sensor(self.acc_name)

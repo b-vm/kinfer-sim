@@ -26,7 +26,7 @@ class Trajectory:
     obs: dict[str, Array]
     command: dict[str, Array]
     # event_state: xax.FrozenDict[str, Array]
-    # action: Array
+    action: Array
     done: Array
     # success: Array
     # timestep: Array
@@ -42,8 +42,11 @@ class RewardPlotter:
         with open(path_to_train_file, 'r') as f:
             content = f.read()
         modified_content = content.replace(
-            'FeetAirtimeReward(scale=1.0, ctrl_dt=self.config.ctrl_dt, touchdown_penalty=0.4),',
-            'FeetAirtimeReward(scale=1.0, ctrl_dt=0.02, touchdown_penalty=0.4),'
+            'FeetAirtimeReward(scale=0.8, ctrl_dt=self.config.ctrl_dt, touchdown_penalty=0.4),',
+            'FeetAirtimeReward(scale=0.8, ctrl_dt=0.02, touchdown_penalty=0.4),'
+        ).replace(
+            'SingleFootContactReward(scale=0.5, ctrl_dt=self.config.ctrl_dt, grace_period=0.1),',
+            'SingleFootContactReward(scale=0.5, ctrl_dt=0.02, grace_period=0.1),'
         )
         temp_path = '/tmp/modified_train.py'
         with open(temp_path, 'w') as f:
@@ -74,6 +77,17 @@ class RewardPlotter:
         
         # Setup reward plots
         first_plot = None
+        
+        # Add total reward plot first
+        self.plots['Total Reward'] = self.win.addPlot(title='Total Reward')
+        first_plot = self.plots['Total Reward']
+        self.plots['Total Reward'].setLabel('left', 'Total Reward')
+        self.plots['Total Reward'].setLabel('bottom', 'Time')
+        self.plots['Total Reward'].showGrid(x=True, y=True, alpha=0.3)
+        self.curves['Total Reward'] = self.plots['Total Reward'].plot(pen='w')
+        self.plot_data['Total Reward'] = []
+        self.win.nextRow()
+        
         for i, (reward_name, reward) in enumerate(self.rewards.items(), 1):
             name = reward_name
             self.plots[name] = self.win.addPlot(title=name)
@@ -209,7 +223,7 @@ class RewardPlotter:
             mjdata, obs_arrays = self.plot_queue.get_nowait()
 
             # mjdata
-            for key in ['qpos', 'qvel', 'xpos', 'xquat', 'heading', 'ctrl']:
+            for key in ['qpos', 'qvel', 'xpos', 'xquat', 'heading', 'ctrl', 'action']:
                 self.traj_data.setdefault(key, []).append(mjdata[key])
 
             # commands
@@ -245,7 +259,8 @@ class RewardPlotter:
             command={k: jnp.stack(v) for k, v in self.traj_data['command'].items()},
             obs={k: jnp.stack(v) for k, v in self.traj_data['obs'].items()},
             ctrl=jnp.stack(self.traj_data['ctrl']),
-            done=jnp.zeros((len(self.traj_data['qpos']),), dtype=jnp.bool_)
+            done=jnp.zeros((len(self.traj_data['qpos']),), dtype=jnp.bool_),
+            action=jnp.stack(self.traj_data['action'])
         )
 
         for reward_name, reward in self.rewards.items():
@@ -260,6 +275,20 @@ class RewardPlotter:
                 import traceback
                 print(f"Full traceback:\n{traceback.format_exc()}")
                 print(f"Error computing reward for {reward_name}: {e}")
+
+        # Calculate total reward
+        total_reward = np.zeros(len(self.traj_data['qpos']))
+        for reward_name, reward in self.rewards.items():
+            if reward_name in self.plot_data:
+                total_reward += np.array(self.plot_data[reward_name]) * reward.scale
+        self.plot_data['Total Reward'] = total_reward.tolist()
+        
+        # Adjust y-axis range for total reward plot
+        min_reward = np.min(total_reward)
+        max_reward = np.max(total_reward)
+        y_min = min(0, min_reward)  # Start at 0 or lower if there are negative values
+        y_max = max(0, max_reward)  # End at 0 or higher if there are positive values
+        self.plots['Total Reward'].setYRange(y_min, y_max, padding=0.1)  # Add 10% padding
 
         base_eulers = xax.quat_to_euler(traj.xquat[:, 1, :])
         base_eulers = base_eulers.at[:, :2].set(0.0)
@@ -337,7 +366,7 @@ class RewardPlotter:
                 await asyncio.sleep(1)
 
         
-    async def add_data(self, mjdata, obs_arrays, heading):
+    async def add_data(self, mjdata, obs_arrays, heading, action):
         """Copy simulation data to be plotted asynchronously"""
         mjdata_copy = {
             'qpos': np.array(mjdata.qpos, copy=True),
@@ -354,7 +383,8 @@ class RewardPlotter:
                 'geom': np.array(mjdata.contact.geom, copy=True),
                 'dist': np.array(mjdata.contact.dist, copy=True)
             },
-            'ctrl': np.array(mjdata.ctrl, copy=True)
+            'ctrl': np.array(mjdata.ctrl, copy=True),
+            'action': np.array(action, copy=True)
         }
         obs_arrays_copy = {k: np.array(v, copy=True) for k, v in obs_arrays.items()}
         await self.plot_queue.put((mjdata_copy, obs_arrays_copy))

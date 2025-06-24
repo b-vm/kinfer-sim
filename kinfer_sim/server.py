@@ -233,7 +233,12 @@ class SimulationServer:
                             group=sub_obs
                         )
                     if self._reward_plotter is not None:
-                        await self._reward_plotter.add_data(self.simulator._data, model_provider.arrays, model_provider.heading)
+                        await self._reward_plotter.add_data(
+                            self.simulator._data,
+                            model_provider.arrays,
+                            model_provider.heading,
+                            output
+                        )
 
                     if logs is not None:
                         logs.append(model_provider.arrays.copy())
