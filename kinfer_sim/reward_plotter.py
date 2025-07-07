@@ -378,7 +378,7 @@ class RewardPlotter:
             'base_site_angvel': np.array(mjdata.sensor('base_site_angvel').data, copy=True),
             'left_foot_touch': np.array(mjdata.sensor('left_foot_touch').data, copy=True),
             'right_foot_touch': np.array(mjdata.sensor('right_foot_touch').data, copy=True),
-            'heading': np.array([heading]),
+            # 'heading': np.array([heading]),
             'contact': {
                 'geom': np.array(mjdata.contact.geom, copy=True),
                 'dist': np.array(mjdata.contact.dist, copy=True)

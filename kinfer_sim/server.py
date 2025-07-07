@@ -236,7 +236,6 @@ class SimulationServer:
                         await self._reward_plotter.add_data(
                             self.simulator._data,
                             model_provider.arrays,
-                            model_provider.heading,
                             output
                         )
 
