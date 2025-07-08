@@ -230,7 +230,6 @@ class RewardPlotter:
                     'unified_command': []
                 }
             unified_command = obs_arrays['command']
-            # unified_command[3] = mjdata['heading'][0]
             self.traj_data['command']['unified_command'].append(unified_command)
 
             # some obs
