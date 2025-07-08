@@ -123,8 +123,6 @@ class RewardPlotter:
                 self.curves[metric] = {
                     'wz_cmd': self.plots[metric].plot(pen=pg.mkPen('y', width=2, style=pg.QtCore.Qt.DashLine), name='ωz Command'),
                     'wz_real': self.plots[metric].plot(pen=pg.mkPen('y', width=2), name='ωz Actual'),
-                    'heading_cmd': self.plots[metric].plot(pen=pg.mkPen('orange', width=2, style=pg.QtCore.Qt.DashLine), name='Heading Command'),
-                    # 'heading_real': self.plots[metric].plot(pen=pg.mkPen('orange', width=2), name='Heading Actual')
                 }
             elif metric == 'base_height':
                 self.curves[metric] = {
@@ -223,7 +221,7 @@ class RewardPlotter:
             mjdata, obs_arrays = self.plot_queue.get_nowait()
 
             # mjdata
-            for key in ['qpos', 'qvel', 'xpos', 'xquat', 'heading', 'ctrl', 'action']:
+            for key in ['qpos', 'qvel', 'xpos', 'xquat', 'ctrl', 'action']:
                 self.traj_data.setdefault(key, []).append(mjdata[key])
 
             # commands
@@ -232,7 +230,7 @@ class RewardPlotter:
                     'unified_command': []
                 }
             unified_command = obs_arrays['command']
-            unified_command[3] = mjdata['heading'][0]
+            # unified_command[3] = mjdata['heading'][0]
             self.traj_data['command']['unified_command'].append(unified_command)
 
             # some obs
@@ -312,8 +310,6 @@ class RewardPlotter:
         self.plot_data['angvel'] = {
             'wz_cmd': [float(x[2]) for x in self.traj_data['command']['unified_command']],
             'wz_real': [float(x[2]) for x in self.traj_data['obs']['sensor_observation_base_site_angvel']], # TODO BUG not correct
-            'heading_cmd': [float(x[3]) for x in self.traj_data['command']['unified_command']],
-            # 'heading_real': [float(x[0]) for x in self.traj_data['heading']]
         }
         standard_height = self.rewards['BaseHeightReward'].standard_height
         self.plot_data['base_height'] = {
@@ -366,7 +362,7 @@ class RewardPlotter:
                 await asyncio.sleep(1)
 
         
-    async def add_data(self, mjdata, obs_arrays, heading, action):
+    async def add_data(self, mjdata, obs_arrays, action):
         """Copy simulation data to be plotted asynchronously"""
         mjdata_copy = {
             'qpos': np.array(mjdata.qpos, copy=True),
@@ -378,7 +374,6 @@ class RewardPlotter:
             'base_site_angvel': np.array(mjdata.sensor('base_site_angvel').data, copy=True),
             'left_foot_touch': np.array(mjdata.sensor('left_foot_touch').data, copy=True),
             'right_foot_touch': np.array(mjdata.sensor('right_foot_touch').data, copy=True),
-            # 'heading': np.array([heading]),
             'contact': {
                 'geom': np.array(mjdata.contact.geom, copy=True),
                 'dist': np.array(mjdata.contact.dist, copy=True)
