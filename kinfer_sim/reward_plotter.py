@@ -50,12 +50,8 @@ class RewardPlotter:
         self.win.show()
         
         # Create a queue for communication between sim and plot threads
-        self.plot_queue = asyncio.Queue()
-        self.data_needs_update = False
-
-        # Start the tasks
-        self.data_task = None
-        self.render_task = None
+        self.new_sim_data_queue = asyncio.Queue()
+        self.plots_need_update = False
 
         self.executor = ThreadPoolExecutor(max_workers=1)
 
@@ -153,9 +149,9 @@ class RewardPlotter:
     async def stop(self):
         """Stop all tasks gracefully"""
         self.running = False
-        if self.data_task:
+        if hasattr(self, 'data_task'):
             await self.data_task
-        if self.render_task:
+        if hasattr(self, 'render_task'):
             await self.render_task
         self.executor.shutdown(wait=True)
 
@@ -171,12 +167,12 @@ class RewardPlotter:
                 return data
             
         # clear queue and then wait for it to be processed by the data loop
-        self.plot_queue = asyncio.Queue()
+        self.new_sim_data_queue = asyncio.Queue()
         await asyncio.sleep(0.5)
 
         self.plot_data = clear_data_structure(self.plot_data)
         self.traj_data = clear_data_structure(self.traj_data)
-        self.data_needs_update = True
+        self.plots_need_update = True
         
     async def _data_loop(self):
         """Process incoming data in background"""
@@ -193,10 +189,10 @@ class RewardPlotter:
     def _process_data_sync(self):
         """Process data from the queue, ran through executor in separate thread to avoid blocking the main thread"""
         new_data = False
-        while not self.plot_queue.empty():
+        while not self.new_sim_data_queue.empty():
             new_data = True
             # Get data from queue synchronously
-            mjdata, obs_arrays = self.plot_queue.get_nowait()
+            mjdata, obs_arrays = self.new_sim_data_queue.get_nowait()
 
             # mjdata
             for key in ['qpos', 'qvel', 'xpos', 'xquat', 'ctrl', 'action']:
@@ -296,8 +292,7 @@ class RewardPlotter:
             # 'roll_real': [float(x[1]) for x in self.traj_data['xquat'][:, 1]]
         }
 
-        self.data_needs_update = True
-        return True
+        self.plots_need_update = True
 
     async def collect_and_organize_data(self):
         """Run the entire data processing in an executor"""
@@ -310,7 +305,7 @@ class RewardPlotter:
         """Render all plots at a fixed rate"""
         while self.running:
             try:
-                if self.data_needs_update:
+                if self.plots_need_update:
                     for name, curves in self.curves.items():
                         if isinstance(curves, dict):
                             # Multiple curves per plot
@@ -324,7 +319,7 @@ class RewardPlotter:
                             x = list(range(len(values)))
                             curves.setData(x, values)
                         self.plots[name].enableAutoRange()
-                    self.data_needs_update = False
+                    self.plots_need_update = False
                 
                 self.app.processEvents()
                 await asyncio.sleep(1/60)
@@ -352,4 +347,4 @@ class RewardPlotter:
             'action': np.array(action, copy=True)
         }
         obs_arrays_copy = {k: np.array(v, copy=True) for k, v in obs_arrays.items()}
-        await self.plot_queue.put((mjdata_copy, obs_arrays_copy))
+        await self.new_sim_data_queue.put((mjdata_copy, obs_arrays_copy))
