@@ -39,20 +39,47 @@ class RewardPlotter:
         path_to_train_file = "/home/bart/kscale/kbot-joystick/train.py"
         # path_to_train_file = "/home/bart/kscale/kbot-walking/train.py"
 
-        # replace error line
+        self.get_reward_functions_from_train_file(path_to_train_file, mujoco_model)
+
+        # Initialize PyQtPlot window and widgets
+        self.app = pg.mkQApp()
+        self.win = pg.GraphicsLayoutWidget()
+        
+        self.traj_data, self.plots, self.curves, self.plot_data = {}, {}, {}, {}
+        self.setup_plots()
+        self.win.show()
+        
+        # Create a queue for communication between sim and plot threads
+        self.plot_queue = asyncio.Queue()
+        self.data_needs_update = False
+
+        # Start the tasks
+        self.data_task = None
+        self.render_task = None
+
+        self.executor = ThreadPoolExecutor(max_workers=1)
+
+    def get_reward_functions_from_train_file(self, path_to_train_file: str, mujoco_model: mujoco.MjModel):
         with open(path_to_train_file, 'r') as f:
             content = f.read()
-        modified_content = content.replace(
-            'FeetAirtimeReward(scale=0.8, ctrl_dt=self.config.ctrl_dt, touchdown_penalty=0.4),',
-            'FeetAirtimeReward(scale=0.8, ctrl_dt=0.02, touchdown_penalty=0.4),'
-        ).replace(
-            'SingleFootContactReward(scale=0.5, ctrl_dt=self.config.ctrl_dt, grace_period=0.1),',
-            'SingleFootContactReward(scale=0.5, ctrl_dt=0.02, grace_period=0.1),'
-        )
+    
+        # replace lines that cause errors
+        if "kbot-joystick" in path_to_train_file:
+            modified_content = content.replace(
+                'FeetAirtimeReward(scale=0.8, ctrl_dt=self.config.ctrl_dt, touchdown_penalty=0.4),',
+                'FeetAirtimeReward(scale=0.8, ctrl_dt=0.02, touchdown_penalty=0.4),'
+            ).replace(
+                'SingleFootContactReward(scale=0.5, ctrl_dt=self.config.ctrl_dt, grace_period=0.1),',
+                'SingleFootContactReward(scale=0.5, ctrl_dt=0.02, grace_period=0.1),'
+            )
+        else:
+            modified_content = content
+
         temp_path = '/tmp/modified_train.py'
         with open(temp_path, 'w') as f:
             f.write(modified_content)
 
+        # import the modified train.py
         spec = importlib.util.spec_from_file_location("train", temp_path)
         train = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(train)
@@ -65,28 +92,6 @@ class RewardPlotter:
             print(f"\n{i}. {reward_name}")
             print(f"   {reward.__doc__ or 'No description available'}")
         print("\n" + "=" * 30 + "\n")
-
-        # Initialize PyQtPlot window and widgets
-        self.app = pg.mkQApp()
-        self.win = pg.GraphicsLayoutWidget()
-        
-        # Create dictionaries to store plots, curves and data
-        self.traj_data, self.plots, self.curves, self.plot_data = {}, {}, {}, {}
-
-        self.setup_plots()
-        self.win.show()
-        
-        # Create a queue for communication between sim and plot threads
-        self.plot_queue = asyncio.Queue()
-        
-        # Data processing and rendering flags
-        self.data_needs_update = False
-
-        # Start the tasks
-        self.data_task = None
-        self.render_task = None
-
-        self.executor = ThreadPoolExecutor(max_workers=1)
 
     def setup_plots(self):
         def make_plot(name: str):
