@@ -37,6 +37,7 @@ class Trajectory:
 class RewardPlotter:
     def __init__(self, mujoco_model: mujoco.MjModel):
         path_to_train_file = "/home/bart/kscale/kbot-joystick/train.py"
+        # path_to_train_file = "/home/bart/kscale/kbot-walking/train.py"
 
         # replace error line
         with open(path_to_train_file, 'r') as f:
@@ -103,7 +104,7 @@ class RewardPlotter:
             self.win.nextRow()
 
         # command plots
-        additional_metrics = ['feet_force_touch_observation', 'feet_contact_observation', 'linvel', 'angvel', 'base_height', 'xyorientation']
+        additional_metrics = ['feet_force_touch_observation', 'linvel', 'angvel', 'base_height', 'xyorientation']
         for metric in additional_metrics:
             self.plots[metric] = self.win.addPlot(title=metric.capitalize())
             self.plots[metric].setXLink(first_plot)  # Link x-axis to first plot
@@ -135,11 +136,6 @@ class RewardPlotter:
                     # 'pitch_real': self.plots[metric].plot(pen=pg.mkPen('m', width=2), name='Pitch Actual'),
                     'roll_cmd': self.plots[metric].plot(pen=pg.mkPen('c', width=2, style=pg.QtCore.Qt.DashLine), name='Roll Command'),
                     # 'roll_real': self.plots[metric].plot(pen=pg.mkPen('c', width=2), name='Roll Actual')
-                }
-            elif metric == 'feet_contact_observation':
-                self.curves[metric] = {
-                    'left_foot_contact': self.plots[metric].plot(pen=pg.mkPen('r', width=2, style=pg.QtCore.Qt.DashLine), name='Left Foot Contact'),
-                    'right_foot_contact': self.plots[metric].plot(pen=pg.mkPen('g', width=2, style=pg.QtCore.Qt.DashLine), name='Right Foot Contact')
                 }
             elif metric == 'feet_force_touch_observation':
                 self.curves[metric] = {
@@ -296,10 +292,6 @@ class RewardPlotter:
             'left_foot_force': [float(x[0]) for x in self.traj_data['obs']['sensor_observation_left_foot_touch']],
             'right_foot_force': [float(x[0]) for x in self.traj_data['obs']['sensor_observation_right_foot_touch']]
         }
-        self.plot_data['feet_contact_observation'] = {
-            'left_foot_contact': [float(x[0] > 0.5) for x in self.traj_data['obs']['sensor_observation_left_foot_touch']],
-            'right_foot_contact': [float(x[0] > 0.5) for x in self.traj_data['obs']['sensor_observation_right_foot_touch']]
-        }
         self.plot_data['linvel'] = {
             'x_cmd': [float(x[0]) for x in self.traj_data['command']['unified_command']],
             'x_real': [float(x[0]) for x in local_frame_linvel],
@@ -373,10 +365,6 @@ class RewardPlotter:
             'base_site_angvel': np.array(mjdata.sensor('base_site_angvel').data, copy=True),
             'left_foot_touch': np.array(mjdata.sensor('left_foot_touch').data, copy=True),
             'right_foot_touch': np.array(mjdata.sensor('right_foot_touch').data, copy=True),
-            'contact': {
-                'geom': np.array(mjdata.contact.geom, copy=True),
-                'dist': np.array(mjdata.contact.dist, copy=True)
-            },
             'ctrl': np.array(mjdata.ctrl, copy=True),
             'action': np.array(action, copy=True)
         }
