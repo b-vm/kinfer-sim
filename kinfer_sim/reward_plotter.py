@@ -71,47 +71,44 @@ class RewardPlotter:
         self.win = pg.GraphicsLayoutWidget()
         
         # Create dictionaries to store plots, curves and data
-        self.traj_data = {}
-        self.plots = {}
-        self.curves = {}
-        self.plot_data = {}
+        self.traj_data, self.plots, self.curves, self.plot_data = {}, {}, {}, {}
+
+        self.setup_plots()
+        self.win.show()
         
-        # Setup reward plots
-        first_plot = None
+        # Create a queue for communication between sim and plot threads
+        self.plot_queue = asyncio.Queue()
         
-        # Add total reward plot first
-        self.plots['Total Reward'] = self.win.addPlot(title='Total Reward')
-        first_plot = self.plots['Total Reward']
-        self.plots['Total Reward'].setLabel('left', 'Total Reward')
-        self.plots['Total Reward'].setLabel('bottom', 'Time')
-        self.plots['Total Reward'].showGrid(x=True, y=True, alpha=0.3)
-        self.curves['Total Reward'] = self.plots['Total Reward'].plot(pen='w')
-        self.plot_data['Total Reward'] = []
-        self.win.nextRow()
-        
-        for i, (reward_name, reward) in enumerate(self.rewards.items(), 1):
-            name = reward_name
-            self.plots[name] = self.win.addPlot(title=name)
-            if first_plot is None:
-                first_plot = self.plots[name]
-            else:
-                self.plots[name].setXLink(first_plot)  # Link x-axis to first plot
-            self.plots[name].setLabel('left', 'Reward')
-            self.plots[name].setLabel('bottom', 'Time')
+        # Data processing and rendering flags
+        self.data_needs_update = False
+                
+        # Start the tasks
+        self.data_task = None
+        self.render_task = None
+
+        self.executor = ThreadPoolExecutor(max_workers=1)
+
+    def setup_plots(self):
+        def make_plot(name: str):
+            self.plots[name] = self.win.addPlot(title=name.capitalize())
+            self.plots[name].setXLink(self.plots['Total Reward'])
             self.plots[name].showGrid(x=True, y=True, alpha=0.3)
             self.curves[name] = self.plots[name].plot(pen='y')
             self.plot_data[name] = []
             self.win.nextRow()
 
+        # Add total reward plot first
+        make_plot('Total Reward')
+        
+        # Setup reward plots
+        for name in self.rewards.keys():
+            make_plot(name)
+
         # command plots
         additional_metrics = ['feet_force_touch_observation', 'linvel', 'angvel', 'base_height', 'xyorientation']
         for metric in additional_metrics:
-            self.plots[metric] = self.win.addPlot(title=metric.capitalize())
-            self.plots[metric].setXLink(first_plot)  # Link x-axis to first plot
-            self.plots[metric].setLabel('left', metric.capitalize())
-            self.plots[metric].setLabel('bottom', 'Time')
+            make_plot(metric)
             self.plots[metric].addLegend()
-            self.plots[metric].showGrid(x=True, y=True, alpha=0.3)
 
             if metric == 'linvel':
                 self.curves[metric] = {
@@ -146,21 +143,7 @@ class RewardPlotter:
             else:
                 self.curves[metric] = self.plots[metric].plot(pen='g')
             self.win.nextRow()
-            
-        self.win.show()
-        
-        # Create a queue for communication between sim and plot threads
-        self.plot_queue = asyncio.Queue()
-        
-        # Data processing and rendering flags
-        self.data_needs_update = False
-        self.running = True
-        
-        # Start the tasks
-        self.data_task = None
-        self.render_task = None
 
-        self.executor = ThreadPoolExecutor(max_workers=1)
 
     async def start(self):
         """Start both the data processing and rendering tasks"""
@@ -341,6 +324,7 @@ class RewardPlotter:
                             values = self.plot_data[name]
                             x = list(range(len(values)))
                             curves.setData(x, values)
+                        self.plots[name].enableAutoRange()
                     self.data_needs_update = False
                 
                 self.app.processEvents()
