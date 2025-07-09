@@ -81,7 +81,7 @@ class RewardPlotter:
         
         # Data processing and rendering flags
         self.data_needs_update = False
-                
+
         # Start the tasks
         self.data_task = None
         self.render_task = None
@@ -91,20 +91,18 @@ class RewardPlotter:
     def setup_plots(self):
         def make_plot(name: str):
             self.plots[name] = self.win.addPlot(title=name.capitalize())
+            self.win.nextRow()
             self.plots[name].setXLink(self.plots['Total Reward'])
             self.plots[name].showGrid(x=True, y=True, alpha=0.3)
             self.curves[name] = self.plots[name].plot(pen='y')
             self.plot_data[name] = []
-            self.win.nextRow()
 
-        # Add total reward plot first
-        make_plot('Total Reward')
-        
         # Setup reward plots
+        make_plot('Total Reward')
         for name in self.rewards.keys():
             make_plot(name)
 
-        # command plots
+        # Setup command + obsplots
         additional_metrics = ['feet_force_touch_observation', 'linvel', 'angvel', 'base_height', 'xyorientation']
         for metric in additional_metrics:
             make_plot(metric)
@@ -139,10 +137,6 @@ class RewardPlotter:
                     'left_foot_force': self.plots[metric].plot(pen=pg.mkPen('r', width=2, style=pg.QtCore.Qt.DashLine), name='Left Foot Force'),
                     'right_foot_force': self.plots[metric].plot(pen=pg.mkPen('g', width=2, style=pg.QtCore.Qt.DashLine), name='Right Foot Force')
                 }
-           
-            else:
-                self.curves[metric] = self.plots[metric].plot(pen='g')
-            self.win.nextRow()
 
 
     async def start(self):
