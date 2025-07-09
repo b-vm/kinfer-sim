@@ -52,6 +52,7 @@ class RewardPlotter:
         # Create a queue for communication between sim and plot threads
         self.new_sim_data_queue = asyncio.Queue()
         self.plots_need_update = False
+        self.reward_carry = {}
 
         self.executor = ThreadPoolExecutor(max_workers=1)
 
@@ -172,6 +173,7 @@ class RewardPlotter:
 
         self.plot_data = clear_data_structure(self.plot_data)
         self.traj_data = clear_data_structure(self.traj_data)
+        self.reward_carry = {}
         self.plots_need_update = True
         
     async def _data_loop(self):
@@ -189,6 +191,8 @@ class RewardPlotter:
     def _process_data_sync(self):
         """Process data from the queue, ran through executor in separate thread to avoid blocking the main thread"""
         new_data = False
+        new_data_index = len(self.traj_data['qpos']) if 'qpos' in self.traj_data else 0
+
         while not self.new_sim_data_queue.empty():
             new_data = True
             # Get data from queue synchronously
@@ -222,26 +226,30 @@ class RewardPlotter:
         if not new_data:
             return False
 
+        # turn new data into Trajectory object
         traj = Trajectory(
-            qpos=jnp.stack(self.traj_data['qpos']),
-            qvel=jnp.stack(self.traj_data['qvel']),
-            xpos=jnp.stack(self.traj_data['xpos']),
-            xquat=jnp.stack(self.traj_data['xquat']),
-            command={k: jnp.stack(v) for k, v in self.traj_data['command'].items()},
-            obs={k: jnp.stack(v) for k, v in self.traj_data['obs'].items()},
-            ctrl=jnp.stack(self.traj_data['ctrl']),
-            done=jnp.zeros((len(self.traj_data['qpos']),), dtype=jnp.bool_),
-            action=jnp.stack(self.traj_data['action'])
+            qpos=jnp.stack(self.traj_data['qpos'][new_data_index:]),
+            qvel=jnp.stack(self.traj_data['qvel'][new_data_index:]),
+            xpos=jnp.stack(self.traj_data['xpos'][new_data_index:]),
+            xquat=jnp.stack(self.traj_data['xquat'][new_data_index:]),
+            command={k: jnp.stack(v)[new_data_index:] for k, v in self.traj_data['command'].items()},
+            obs={k: jnp.stack(v)[new_data_index:] for k, v in self.traj_data['obs'].items()},
+            ctrl=jnp.stack(self.traj_data['ctrl'][new_data_index:]),
+            done=jnp.zeros((len(self.traj_data['qpos'][new_data_index:]),), dtype=jnp.bool_),
+            action=jnp.stack(self.traj_data['action'][new_data_index:])
         )
 
+        # calculate and append new rewards. Careful to only compute new rewards as reward math is the bottleneck.
         for reward_name, reward in self.rewards.items():
             try:
                 name = reward_name
                 if hasattr(reward, 'get_reward_stateful'):
-                    reward_values, _ = reward.get_reward_stateful(traj, reward.initial_carry(None))
+                    if reward_name not in self.reward_carry:
+                        self.reward_carry[reward_name] = reward.initial_carry(None)
+                    reward_values, self.reward_carry[reward_name] = reward.get_reward_stateful(traj, self.reward_carry[reward_name])
                 else:
                     reward_values = reward.get_reward(traj)
-                self.plot_data[name] = [float(x) for x in reward_values.flatten()]
+                self.plot_data[name] += [float(x) for x in reward_values.flatten()]
             except Exception as e:
                 import traceback
                 print(f"Full traceback:\n{traceback.format_exc()}")
@@ -251,6 +259,7 @@ class RewardPlotter:
         total_reward = np.zeros(len(self.traj_data['qpos']))
         for reward_name, reward in self.rewards.items():
             if reward_name in self.plot_data:
+                print("reward name", reward_name, "length", len(self.plot_data[reward_name]))
                 total_reward += np.array(self.plot_data[reward_name]) * reward.scale
         self.plot_data['Total Reward'] = total_reward.tolist()
         
