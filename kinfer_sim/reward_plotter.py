@@ -270,10 +270,10 @@ class RewardPlotter:
         y_max = max(0, max_reward)  # End at 0 or higher if there are positive values
         self.plots['Total Reward'].setYRange(y_min, y_max, padding=0.1)  # Add 10% padding
 
-        base_eulers = xax.quat_to_euler(traj.xquat[:, 1, :])
+        base_eulers = xax.quat_to_euler(jnp.stack(self.traj_data['xquat'])[:, 1, :])
         base_eulers = base_eulers.at[:, :2].set(0.0)
         heading_quats = xax.euler_to_quat(base_eulers)
-        local_frame_linvel = xax.rotate_vector_by_quat(traj.obs['sensor_observation_base_site_linvel'], heading_quats, inverse=True)
+        local_frame_linvel = xax.rotate_vector_by_quat(jnp.stack(self.traj_data['obs']['sensor_observation_base_site_linvel']), heading_quats, inverse=True)
 
         self.plot_data['feet_force_touch_observation'] = {
             'left_foot_force': [float(x[0]) for x in self.traj_data['obs']['sensor_observation_left_foot_touch']],
