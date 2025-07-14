@@ -250,14 +250,13 @@ class ModelProvider(ModelProviderABC):
 
         command_obs = np.concatenate([
             self.command_array,
-            np.zeros(1), # mask out carried heading # TODO remove, requires removing from training
         ])
 
         # if self.command_array[0] > 0: 
         #     command_obs = np.array([0, 1, 0, 0]) # walk
-        # elif self.command_array[1] > 0:
+        # elif self.command_array[2] > 0:
         #     command_obs = np.array([0, 0, 1, 0]) # turn left
-        # elif self.command_array[1] < 0:
+        # elif self.command_array[2] < 0:
         #     command_obs = np.array([0, 0, 0, 1]) # turn right
         # else:
         #     command_obs = np.array([1, 0, 0, 0]) # stand

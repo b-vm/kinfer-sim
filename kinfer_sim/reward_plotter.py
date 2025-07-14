@@ -36,8 +36,9 @@ class Trajectory:
 
 class RewardPlotter:
     def __init__(self, mujoco_model: mujoco.MjModel):
-        path_to_train_file = "/home/bart/kscale/kbot-joystick/train.py"
+        # path_to_train_file = "/home/bart/kscale/kbot-joystick/train.py"
         # path_to_train_file = "/home/bart/kscale/kbot-walking/train.py"
+        path_to_train_file = "/home/bart/kscale/zbot-policy-walking/train.py"
 
         self.get_reward_functions_from_train_file(path_to_train_file, mujoco_model)
 
@@ -69,8 +70,23 @@ class RewardPlotter:
                 'SingleFootContactReward(scale=0.5, ctrl_dt=self.config.ctrl_dt, grace_period=0.1),',
                 'SingleFootContactReward(scale=0.5, ctrl_dt=0.02, grace_period=0.1),'
             )
+        if "zbot-policy-walking" in path_to_train_file:
+            modified_content = content.replace(
+                'FeetAirtimeReward(scale=1.0, ctrl_dt=self.config.ctrl_dt, touchdown_penalty=0.1),',
+                'FeetAirtimeReward(scale=1.0, ctrl_dt=0.02, touchdown_penalty=0.1),'
+            ).replace(
+                'SingleFootContactReward(scale=0.5, ctrl_dt=self.config.ctrl_dt, grace_period=0.2),',
+                'SingleFootContactReward(scale=0.5, ctrl_dt=0.02, grace_period=0.2),'
+            ).replace(
+                'linvel_obs_name: str = attrs.field(default="sensor_observation_base_site_linvel")',
+                'linvel_obs_name: str = attrs.field(default="base_linear_velocity_observation")'
+            )
         else:
-            modified_content = content
+            modified_content = content.replace(
+                'ksim.AMPReward(scale=0.2),',
+                ''
+            )
+            # modified_content = content
 
         temp_path = '/tmp/modified_train.py'
         with open(temp_path, 'w') as f:
@@ -82,7 +98,12 @@ class RewardPlotter:
         spec.loader.exec_module(train)
         
         # Get the actual rewards being used in train.py
-        self.rewards = train.HumanoidWalkingTask.get_rewards(self=None, physics_model=mujoco_model)
+        if hasattr(train, 'HumanoidWalkingTask'):
+            self.rewards = train.HumanoidWalkingTask.get_rewards(self=None, physics_model=mujoco_model)
+        elif hasattr(train, 'ZbotWalkingTask'):
+            self.rewards = train.ZbotWalkingTask.get_rewards(self=None, physics_model=mujoco_model)
+        else:
+            raise ValueError(f"No walking task found in {path_to_train_file}")
         self.rewards = {reward.__class__.__name__: reward for reward in self.rewards}
         print("\n=== Found Reward Classes ===")
         for i, (reward_name, reward) in enumerate(self.rewards.items(), 1):
@@ -105,7 +126,7 @@ class RewardPlotter:
             make_plot(name)
 
         # Setup command + obsplots
-        additional_metrics = ['feet_force_touch_observation', 'linvel', 'angvel', 'base_height', 'xyorientation']
+        additional_metrics = ['feet_force_touch_observation', 'feet_contact_observation', 'linvel', 'angvel', 'base_height', 'xyorientation']
         for metric in additional_metrics:
             make_plot(metric)
             self.plots[metric].addLegend()
@@ -138,6 +159,11 @@ class RewardPlotter:
                 self.curves[metric] = {
                     'left_foot_force': self.plots[metric].plot(pen=pg.mkPen('r', width=2, style=pg.QtCore.Qt.DashLine), name='Left Foot Force'),
                     'right_foot_force': self.plots[metric].plot(pen=pg.mkPen('g', width=2, style=pg.QtCore.Qt.DashLine), name='Right Foot Force')
+                }
+            elif metric == 'feet_contact_observation':
+                self.curves[metric] = {
+                    'left_foot_contact': self.plots[metric].plot(pen=pg.mkPen('r', width=2, style=pg.QtCore.Qt.DashLine), name='Left Foot Contact'),
+                    'right_foot_contact': self.plots[metric].plot(pen=pg.mkPen('g', width=2, style=pg.QtCore.Qt.DashLine), name='Right Foot Contact')
                 }
 
 
@@ -205,10 +231,26 @@ class RewardPlotter:
             # commands
             if not 'command' in self.traj_data:
                 self.traj_data['command'] = {
-                    'unified_command': []
+                    'unified_command': [],
+                    'walking_command': [],
+                    'arm_command': []
                 }
             unified_command = obs_arrays['command']
             self.traj_data['command']['unified_command'].append(unified_command)
+
+
+            wcmd = np.zeros(24)
+            if unified_command[0] > 0:
+                wcmd[1] = 1.0
+            elif unified_command[2] > 0:
+                wcmd[2] = 1.0
+            elif unified_command[2] < 0:
+                wcmd[3] = 1.0
+            else:
+                wcmd[0] = 1.0
+
+            self.traj_data['command']['walking_command'].append(wcmd)
+            self.traj_data['command']['arm_command'].append(np.ones(32))
 
             # some obs
             if not 'obs' in self.traj_data:
@@ -259,7 +301,6 @@ class RewardPlotter:
         total_reward = np.zeros(len(self.traj_data['qpos']))
         for reward_name, reward in self.rewards.items():
             if reward_name in self.plot_data:
-                print("reward name", reward_name, "length", len(self.plot_data[reward_name]))
                 total_reward += np.array(self.plot_data[reward_name]) * reward.scale
         self.plot_data['Total Reward'] = total_reward.tolist()
         
@@ -291,14 +332,18 @@ class RewardPlotter:
         }
         standard_height = self.rewards['BaseHeightReward'].standard_height
         self.plot_data['base_height'] = {
-            'base_height_cmd': [float(x[4]+standard_height) for x in self.traj_data['command']['unified_command']],
+            'base_height_cmd': [float(x[3]+standard_height) for x in self.traj_data['command']['unified_command']],
             'base_height_real': [float(x[1, 2]) for x in self.traj_data['xpos']]
         }
         self.plot_data['xyorientation'] = {
-            'roll_cmd': [float(x[5]) for x in self.traj_data['command']['unified_command']],
+            'roll_cmd': [float(x[4]) for x in self.traj_data['command']['unified_command']],
             # 'pitch_real': [float(x[0]) for x in self.traj_data['xquat'][:, 0]],
-            'pitch_cmd': [float(x[6]) for x in self.traj_data['command']['unified_command']],
+            'pitch_cmd': [float(x[5]) for x in self.traj_data['command']['unified_command']],
             # 'roll_real': [float(x[1]) for x in self.traj_data['xquat'][:, 1]]
+        }
+        self.plot_data['feet_contact_observation'] = {
+            'left_foot_contact': [float(x[0] > 0.5) for x in self.traj_data['obs']['sensor_observation_left_foot_touch']],
+            'right_foot_contact': [float(x[0] > 0.5) for x in self.traj_data['obs']['sensor_observation_right_foot_touch']]
         }
 
         self.plots_need_update = True
