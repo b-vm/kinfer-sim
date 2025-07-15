@@ -268,4 +268,5 @@ class ModelProvider(ModelProviderABC):
         joint_names = metadata.joint_names  # type: ignore[attr-defined]
         assert action.shape == (len(joint_names),)
         self.arrays["action"] = action
+        action *= 0
         self.simulator.command_actuators({name: {"position": action[i]} for i, name in enumerate(joint_names)})

@@ -70,7 +70,7 @@ class RewardPlotter:
                 'SingleFootContactReward(scale=0.5, ctrl_dt=self.config.ctrl_dt, grace_period=0.1),',
                 'SingleFootContactReward(scale=0.5, ctrl_dt=0.02, grace_period=0.1),'
             )
-        if "zbot-policy-walking" in path_to_train_file:
+        elif "zbot-policy-walking" in path_to_train_file:
             modified_content = content.replace(
                 'FeetAirtimeReward(scale=1.0, ctrl_dt=self.config.ctrl_dt, touchdown_penalty=0.1),',
                 'FeetAirtimeReward(scale=1.0, ctrl_dt=0.02, touchdown_penalty=0.1),'
