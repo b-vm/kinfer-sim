@@ -61,36 +61,23 @@ class RewardPlotter:
         with open(path_to_train_file, 'r') as f:
             content = f.read()
     
-        # replace lines that cause errors
-        if "kbot-joystick" in path_to_train_file:
-            modified_content = content.replace(
-                'FeetAirtimeReward(scale=0.8, ctrl_dt=self.config.ctrl_dt, touchdown_penalty=0.4),',
-                'FeetAirtimeReward(scale=0.8, ctrl_dt=0.02, touchdown_penalty=0.4),'
-            ).replace(
-                'SingleFootContactReward(scale=0.5, ctrl_dt=self.config.ctrl_dt, grace_period=0.1),',
-                'SingleFootContactReward(scale=0.5, ctrl_dt=0.02, grace_period=0.1),'
-            )
-        elif "zbot-policy-walking" in path_to_train_file:
-            modified_content = content.replace(
-                'FeetAirtimeReward(scale=1.0, ctrl_dt=self.config.ctrl_dt, touchdown_penalty=0.1),',
-                'FeetAirtimeReward(scale=1.0, ctrl_dt=0.02, touchdown_penalty=0.1),'
-            ).replace(
-                'SingleFootContactReward(scale=0.5, ctrl_dt=self.config.ctrl_dt, grace_period=0.2),',
-                'SingleFootContactReward(scale=0.5, ctrl_dt=0.02, grace_period=0.2),'
-            ).replace(
-                'linvel_obs_name: str = attrs.field(default="sensor_observation_base_site_linvel")',
-                'linvel_obs_name: str = attrs.field(default="base_linear_velocity_observation")'
-            )
-        else:
-            modified_content = content.replace(
+        # fix lines that cause errors
+        single_foot_line = next(i for i, line in enumerate(content.splitlines()) if 'SingleFootContactReward' in line and 'self.config' in line)
+        feet_airtime_line = next(i for i, line in enumerate(content.splitlines()) if 'FeetAirtimeReward' in line and 'self.config' in line)
+
+        content = content.splitlines()
+        content[single_foot_line] = content[single_foot_line].replace('self.config.ctrl_dt', '0.02')
+        content[feet_airtime_line] = content[feet_airtime_line].replace('self.config.ctrl_dt', '0.02')
+        content = '\n'.join(content)
+        if "kbot-walking" in path_to_train_file:
+            content = content.replace(
                 'ksim.AMPReward(scale=0.2),',
                 ''
             )
-            # modified_content = content
 
         temp_path = '/tmp/modified_train.py'
         with open(temp_path, 'w') as f:
-            f.write(modified_content)
+            f.write(content)
 
         # import the modified train.py
         spec = importlib.util.spec_from_file_location("train", temp_path)
@@ -136,7 +123,7 @@ class RewardPlotter:
                     'x_cmd': self.plots[metric].plot(pen=pg.mkPen('r', width=2, style=pg.QtCore.Qt.DashLine), name='X Command'),
                     'x_real': self.plots[metric].plot(pen=pg.mkPen('r', width=2), name='X Actual'),
                     'y_cmd': self.plots[metric].plot(pen=pg.mkPen('g', width=2, style=pg.QtCore.Qt.DashLine), name='Y Command'),
-                    'y_real': self.plots[metric].plot(pen=pg.mkPen('g', width=2), name='Y Actual')
+                    'y_real': self.plots[metric].plot(pen=pg.mkPen('g', width=2), name='Y Actual'),
                 }
             elif metric == 'angvel':
                 self.curves[metric] = {
@@ -315,6 +302,7 @@ class RewardPlotter:
         base_eulers = base_eulers.at[:, :2].set(0.0)
         heading_quats = xax.euler_to_quat(base_eulers)
         local_frame_linvel = xax.rotate_vector_by_quat(jnp.stack(self.traj_data['obs']['sensor_observation_base_site_linvel']), heading_quats, inverse=True)
+        local_frame_base_qvel = xax.rotate_vector_by_quat(jnp.stack(self.traj_data['qvel'])[:, :3], heading_quats, inverse=True)
 
         self.plot_data['feet_force_touch_observation'] = {
             'left_foot_force': [float(x[0]) for x in self.traj_data['obs']['sensor_observation_left_foot_touch']],
@@ -324,7 +312,7 @@ class RewardPlotter:
             'x_cmd': [float(x[0]) for x in self.traj_data['command']['unified_command']],
             'x_real': [float(x[0]) for x in local_frame_linvel],
             'y_cmd': [float(x[1]) for x in self.traj_data['command']['unified_command']],
-            'y_real': [float(x[1]) for x in local_frame_linvel]
+            'y_real': [float(x[1]) for x in local_frame_linvel],
         }
         self.plot_data['angvel'] = {
             'wz_cmd': [float(x[2]) for x in self.traj_data['command']['unified_command']],
