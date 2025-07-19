@@ -337,6 +337,10 @@ async def serve(config: ServerConfig) -> None:
         keyboard_listener = KeyboardListener()
         key_queue, reset_queue, pause_queue = keyboard_listener.get_queues()
 
+    # print(model_metadata.control_frequency)
+    # model_metadata.control_frequency = '10'
+    # print(model_metadata.control_frequency)
+
     server = SimulationServer(
         model_path=model_path,
         model_metadata=model_metadata,
