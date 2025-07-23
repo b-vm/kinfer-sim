@@ -35,10 +35,15 @@ class Trajectory:
 
 
 class RewardPlotter:
-    def __init__(self, mujoco_model: mujoco.MjModel):
-        path_to_train_file = "/home/bart/kscale/kbot-joystick/train.py"
-        # path_to_train_file = "/home/bart/kscale/kbot-walking/train.py"
-        # path_to_train_file = "/home/bart/kscale/zbot-policy-walking/train.py"
+    def __init__(self, mujoco_model: mujoco.MjModel, mujoco_model_name: str):
+        if mujoco_model_name == "kbot-joystick":
+            path_to_train_file = "/home/bart/kscale/kbot-joystick/train.py"
+        elif mujoco_model_name == "kbot-walking":
+            path_to_train_file = "/home/bart/kscale/kbot-walking/train.py"
+        elif mujoco_model_name == "zbot-policy-walking":
+            path_to_train_file = "/home/bart/kscale/zbot-policy-walking/train.py"
+        else:
+            raise ValueError(f"No train file found for model: {mujoco_model_name}")
 
         self.get_reward_functions_from_train_file(path_to_train_file, mujoco_model)
 
@@ -225,8 +230,8 @@ class RewardPlotter:
             unified_command = obs_arrays['command']
             ucmd = np.concatenate([
                 unified_command[:3],
-                np.zeros(1),
-                unified_command[3:]
+                np.zeros(1), # BUG lack of actual heading causes issue with reward math
+                unified_command[3:],
             ])
             self.traj_data['command']['unified_command'].append(ucmd)
 
@@ -323,7 +328,10 @@ class RewardPlotter:
             'wz_cmd': [float(x[2]) for x in self.traj_data['command']['unified_command']],
             'wz_real': [float(x[2]) for x in self.traj_data['obs']['sensor_observation_base_site_angvel']], # TODO BUG not correct
         }
-        standard_height = self.rewards['BaseHeightReward'].standard_height
+        if 'TerrainBaseHeightReward' in self.rewards:
+            standard_height = self.rewards['TerrainBaseHeightReward'].standard_height
+        else:
+            standard_height = self.rewards['BaseHeightReward'].standard_height
         self.plot_data['base_height'] = {
             'base_height_cmd': [float(x[4]+standard_height) for x in self.traj_data['command']['unified_command']],
             'base_height_real': [float(x[1, 2]) for x in self.traj_data['xpos']]

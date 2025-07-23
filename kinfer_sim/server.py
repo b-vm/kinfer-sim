@@ -124,7 +124,7 @@ class SimulationServer:
         self._plot_rewards = config.plot_rewards
 
         # Initialize reward plotter if enabled
-        self._reward_plotter = RewardPlotter(self.simulator._model) if self._plot_rewards else None
+        self._reward_plotter = RewardPlotter(self.simulator._model, config.mujoco_model_name) if self._plot_rewards else None
 
         self._video_writer: VideoWriter | None = None
         if self._save_video:
@@ -251,12 +251,12 @@ class SimulationServer:
                 current_time = time.perf_counter()
                 if current_time - last_fps_time >= fps_update_interval:
                     physics_fps = num_steps / (current_time - last_fps_time)
-                    logger.info(
-                        "Physics FPS: %.2f, Simulation time: %.3f, Wall time: %.3f",
-                        physics_fps,
-                        self.simulator.sim_time,
-                        current_time,
-                    )
+                    # logger.info(
+                    #     "Physics FPS: %.2f, Simulation time: %.3f, Wall time: %.3f",
+                    #     physics_fps,
+                    #     self.simulator.sim_time,
+                    #     current_time,
+                    # )
                     num_steps = 0
                     last_fps_time = current_time
 
@@ -337,9 +337,10 @@ async def serve(config: ServerConfig) -> None:
         keyboard_listener = KeyboardListener()
         key_queue, reset_queue, pause_queue = keyboard_listener.get_queues()
 
-    # print(model_metadata.control_frequency)
-    # model_metadata.control_frequency = '10'
-    # print(model_metadata.control_frequency)
+    # override actuator type for zbot
+    if 'zbot' in config.mujoco_model_name:
+        for meta_data in model_metadata.joint_name_to_metadata.values():
+            meta_data.actuator_type = "position"
 
     server = SimulationServer(
         model_path=model_path,
