@@ -167,7 +167,7 @@ class ModelProvider(ModelProviderABC):
             elif input_type == "gyroscope":
                 inputs[input_type] = self.get_gyroscope()
             elif input_type == "command":
-                inputs[input_type] = self.get_command()
+                inputs[input_type] = self.get_command(num_commands=metadata.num_commands)
             elif input_type == "time":
                 inputs[input_type] = self.get_time()
             else:
@@ -236,31 +236,23 @@ class ModelProvider(ModelProviderABC):
         self.arrays["time"] = time_array
         return time_array
 
-    def get_command(self) -> np.ndarray:
+    def get_command(self, num_commands: int) -> np.ndarray:
         # Process any queued keyboard commands
         if self.key_queue is not None: 
             self.process_key_queue()
             logging.info(
-                f"Command:\t\033[31mVx\033[0m=\033[{31 if self.command_array[0] != 0.0 else 0}m{format(self.command_array[0], '.2f')}\033[0m,\t"
-                f"\033[32mVy\033[0m=\033[{32 if self.command_array[1] != 0.0 else 0}m{format(self.command_array[1], '.2f')}\033[0m,\t"
-                f"\033[33mωz\033[0m=\033[{33 if self.command_array[2] != 0.0 else 0}m{format(self.command_array[2], '.2f')}\033[0m,\t"
-                f"\033[34mbh\033[0m=\033[{34 if self.command_array[3] != 0.0 else 0}m{format(self.command_array[3], '.2f')}\033[0m,\t"
-                f"\033[36mbr\033[0m=\033[{36 if self.command_array[4] != 0.0 else 0}m{format(self.command_array[4], '.2f')}\033[0m,\t"
-                f"\033[35mbp\033[0m=\033[{35 if self.command_array[5] != 0.0 else 0}m{format(self.command_array[5], '.2f')}\033[0m"
+                f"Command:\t\033[31mVx\033[0m=\033[{31 if self.command_array[0] != 0.0 else 0}m{format(self.command_array[0], '.1f')}\033[0m, \t"
+                f"\033[32mVy\033[0m=\033[{32 if self.command_array[1] != 0.0 else 0}m{format(self.command_array[1], '.1f')}\033[0m, \t"
+                f"\033[33mωz\033[0m=\033[{33 if self.command_array[2] != 0.0 else 0}m{format(self.command_array[2], '.1f')}\033[0m, \t"
+                f"\033[34mbh\033[0m=\033[{34 if self.command_array[3] != 0.0 else 0}m{format(self.command_array[3], '.1f')}\033[0m, \t"
+                f"\033[36mbr\033[0m=\033[{36 if self.command_array[4] != 0.0 else 0}m{format(self.command_array[4], '.1f')}\033[0m, \t"
+                f"\033[35mbp\033[0m=\033[{35 if self.command_array[5] != 0.0 else 0}m{format(self.command_array[5], '.1f')}\033[0m"
             )
 
         command_obs = np.concatenate([
             self.command_array,
-        ])
-
-        # if self.command_array[0] > 0: 
-        #     command_obs = np.array([0, 1, 0, 0]) # walk
-        # elif self.command_array[2] > 0:
-        #     command_obs = np.array([0, 0, 1, 0]) # turn left
-        # elif self.command_array[2] < 0:
-        #     command_obs = np.array([0, 0, 0, 1]) # turn right
-        # else:
-        #     command_obs = np.array([1, 0, 0, 0]) # stand
+            np.zeros(10),
+        ])[:num_commands]
 
         self.arrays["command"] = command_obs
         return command_obs
@@ -268,45 +260,4 @@ class ModelProvider(ModelProviderABC):
     def take_action(self, action: np.ndarray, metadata: PyModelMetadata) -> None:
         joint_names = metadata.joint_names  # type: ignore[attr-defined]
         assert action.shape == (len(joint_names),)
-        self.arrays["action"] = action
-
-
-        # JOINT_BIASES: list[tuple[str, float, float]] = [
-        #     ("right_hip_yaw", 0.0, 1.0),  # 0
-        #     ("right_hip_roll", -0.1, 1.0),  # 1
-        #     ("right_hip_pitch", -0.4, 0.01),  # 2
-        #     ("right_knee_pitch", -0.8, 0.01),  # 3
-        #     ("right_ankle_pitch", -0.4, 0.01),  # 4
-        #     ("right_ankle_roll", -0.1, 0.01),  # 5
-        #     ("left_hip_yaw", 0.0, 1.0),  # 6
-        #     ("left_hip_roll", 0.1, 1.0),  # 7
-        #     ("left_hip_pitch", -0.4, 0.01),  # 8
-        #     ("left_knee_pitch", -0.8, 0.01),  # 9
-        #     ("left_ankle_pitch", -0.4, 0.01),  # 10
-        #     ("left_ankle_roll", 0.1, 0.01),  # 11
-        #     ("left_shoulder_pitch", 0.0, 1.0),  # 12
-        #     ("left_shoulder_roll", 0.2, 1.0),  # 13
-        #     ("left_elbow_roll", -0.2, 1.0),  # 14
-        #     ("left_gripper_roll", 0.0, 1.0),  # 15
-        #     ("right_shoulder_pitch", 0.0, 1.0),  # 16
-        #     ("right_shoulder_roll", -0.2, 1.0),  # 17
-        #     ("right_elbow_roll", 0.2, 1.0),  # 18
-        #     ("right_gripper_roll", 0.0, 1.0),  # 19
-        # ]
-        # JOINT_BIASES = np.array([bias for name, bias, _ in JOINT_BIASES])
-        # action[12:] =  JOINT_BIASES[12:]
-        # action = JOINT_BIASES
-        # # action *= 0.0
-        # if not hasattr(self, 'n'):
-        #     self.n = 0
-
-        # T = 100
-        # t = (self.n % T) / T
-
-        # if t < 0.5:
-        #     action[-2] = -10
-        # else:
-        #     action[-2] = 10
-
-        # self.n += 1
         self.simulator.command_actuators({name: {"position": action[i]} for i, name in enumerate(joint_names)})
