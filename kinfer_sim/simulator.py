@@ -455,7 +455,7 @@ class MujocoSimulator:
         qpos = np.zeros_like(self._data.qpos)
         if self._freejoint:
             qpos[:3] = np.array([0.0, 0.0, self._start_height] if xyz is None else xyz)
-            qpos[3:7] = np.array([1.0, 0.0, 0.0, 0.0] if quat is None else quat)
+            qpos[3:7] = np.array([0.0, 0.0, 0.0, 1.0] if quat is None else quat)
             qpos[7:] = np.zeros_like(self._data.qpos[7:])
         else:
             qpos[:] = np.zeros_like(self._data.qpos)
