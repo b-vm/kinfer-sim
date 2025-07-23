@@ -141,15 +141,15 @@ class PositionActuator(Actuator):
         clamped_position = self.get_clamped_position_target(target_position)
 
         # Log warning if position was clamped
-        if target_position != clamped_position:
-            logger.warning(
-                "%s (id %d) action %s was out of joint limits: [%.3f, %.3f]",
-                self.joint_name,
-                self.joint_id,
-                target_position,
-                self.joint_min,
-                self.joint_max,
-            )
+        # if target_position != clamped_position:
+        #     logger.warning(
+        #         "%s (id %d) action %s was out of joint limits: [%.3f, %.3f]",
+        #         self.joint_name,
+        #         self.joint_id,
+        #         target_position,
+        #         self.joint_min,
+        #         self.joint_max,
+        #     )
 
         torque = (
             self.kp * (target_position - qpos) + self.kd * (cmd.get("velocity", 0.0) - qvel) + cmd.get("torque", 0.0)
@@ -289,19 +289,30 @@ class FeetechActuator(Actuator):
             raise ValueError(f"Joint {joint_name}: ID is not specified in metadata")
         if actuator_meta is None:
             raise ValueError("Feetech actuator metadata missing")
+        
+        max_torque = _as_float(actuator_meta.max_torque)
+        v_max = 2.0
+        a_max = 17.45
+
+        # manual overrides
+        # max_torque = _as_float(actuator_meta.max_torque)
+        # v_max = 2.0 * 5
+        # a_max = 17.45 * 100
+        # max_torque = 0.25 * max_torque
+
         return cls(
             joint_name=joint_name,
             joint_id=joint_meta.id,
             kp=_as_float(joint_meta.kp),
             kd=_as_float(joint_meta.kd),
-            max_torque=_as_float(actuator_meta.max_torque),
+            max_torque=max_torque,
             max_pwm=_as_float(actuator_meta.max_pwm, default=1.0),
             vin=_as_float(actuator_meta.vin, default=12.0),
             kt=_as_float(actuator_meta.kt, default=1.0),
             r=_as_float(actuator_meta.R, default=1.0),
             error_gain=_as_float(actuator_meta.error_gain, default=1.0),
-            v_max=_as_float(actuator_meta.max_velocity, default=2.0),
-            a_max=_as_float(actuator_meta.amax, default=17.45),
+            v_max=v_max,
+            a_max=a_max,
             dt=dt,
             positive_deadband=get_servo_deadband()[0],
             negative_deadband=get_servo_deadband()[1],
