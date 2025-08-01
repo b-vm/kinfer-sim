@@ -8,6 +8,7 @@ import numpy as np
 from kinfer.rust_bindings import ModelProviderABC, PyModelMetadata
 
 from kinfer_sim.simulator import MujocoSimulator
+from kinfer_sim.motions import Motion, MOTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,8 @@ class ModelProvider(ModelProviderABC):
     gyro_name: str
     arrays: dict[str, np.ndarray]
     key_queue: Queue | None
+    command_array: np.ndarray
+    active_motion: Motion | None
 
     def __new__(
         cls,
@@ -96,7 +99,8 @@ class ModelProvider(ModelProviderABC):
         self.gyro_name = gyro_name
         self.arrays = {}
         self.key_queue = key_queue
-        self.command_array = np.zeros(6) # vx vy wz base_height roll pitch
+        self.command_array = np.zeros(6)  # vx vy wz base_height roll pitch
+        self.active_motion = None
         return self
     
     def process_key_queue(self):
@@ -105,9 +109,44 @@ class ModelProvider(ModelProviderABC):
             key = self.key_queue.get()
             key = key.strip("'")
 
+            # motion sequence triggers
+            def set_motion(motion_name: str):
+                if motion_name in MOTIONS:
+                    self.active_motion = MOTIONS[motion_name](dt=self.simulator._control_dt)
+                    logger.info(f"Starting {motion_name} motion sequence")
+
+            if key == 'z':
+                set_motion('salute')
+            elif key == 'x':
+                set_motion('wave')
+            elif key == 'c':
+                set_motion('pickup')
+            # Test motion bindings
+            elif key == '1':
+                set_motion('test_rsp')  # Right shoulder pitch
+            elif key == '2':
+                set_motion('test_rsr')  # Right shoulder roll
+            elif key == '3':
+                set_motion('test_rsy')  # Right shoulder yaw
+            elif key == '4':
+                set_motion('test_re')   # Right elbow
+            elif key == '5':
+                set_motion('test_rw')   # Right wrist
+            elif key == '6':
+                set_motion('test_lsp')  # Left shoulder pitch
+            elif key == '7':
+                set_motion('test_lsr')  # Left shoulder roll
+            elif key == '8':
+                set_motion('test_lsy')  # Left shoulder yaw
+            elif key == '9':
+                set_motion('test_le')   # Left elbow
+            # elif key == '0': # prefer to use 0 for ressetting commands
+            #     set_motion('test_lw')   # Left wrist
+
             # reset commands
-            if key == '0' or key == 'key.backspace':
+            elif key == '0' or key == 'key.backspace':
                 self.command_array *= 0
+                self.active_motion = None
             
             # lin vel
             elif key == 'w':
@@ -249,10 +288,25 @@ class ModelProvider(ModelProviderABC):
                 f"\033[35mbp\033[0m=\033[{35 if self.command_array[5] != 0.0 else 0}m{format(self.command_array[5], '.1f')}\033[0m"
             )
 
+        # Initialize arm commands
+        joystick_cmd = self.command_array
+        arm_cmd = np.zeros(10)
+
         command_obs = np.concatenate([
-            self.command_array,
-            np.zeros(10),
+            joystick_cmd,
+            arm_cmd,
         ])[:num_commands]
+
+        # If there's an active motion sequence, get the next positions
+        if self.active_motion is not None:
+            next = self.active_motion.get_next_motion_frame()
+            if next is not None:
+                cmd, pos = next
+                command_obs = np.concatenate([cmd, pos])[:num_commands]
+            else:
+                self.active_motion = None
+                logger.info("Stopping motion sequence")
+
 
         self.arrays["command"] = command_obs
         return command_obs

@@ -36,11 +36,11 @@ class Trajectory:
 
 class RewardPlotter:
     def __init__(self, mujoco_model: mujoco.MjModel, mujoco_model_name: str):
-        if mujoco_model_name == "kbot-joystick":
+        if 'kbot' in mujoco_model_name:
             path_to_train_file = "/home/bart/kscale/kbot-joystick/train.py"
-        elif mujoco_model_name == "kbot-walking":
-            path_to_train_file = "/home/bart/kscale/kbot-walking/train.py"
-        elif mujoco_model_name == "zbot-policy-walking":
+        # elif 'kbot-walking':
+        #     path_to_train_file = "/home/bart/kscale/kbot-walking/train.py"
+        elif 'zbot' in mujoco_model_name:
             path_to_train_file = "/home/bart/kscale/zbot-policy-walking/train.py"
         else:
             raise ValueError(f"No train file found for model: {mujoco_model_name}")
@@ -343,8 +343,8 @@ class RewardPlotter:
             # 'roll_real': [float(x[1]) for x in self.traj_data['xquat'][:, 1]]
         }
         self.plot_data['feet_contact_observation'] = {
-            'left_foot_contact': [float(x[0] > 0.5) for x in self.traj_data['obs']['sensor_observation_left_foot_touch']],
-            'right_foot_contact': [float(x[0] > 0.5) for x in self.traj_data['obs']['sensor_observation_right_foot_touch']]
+            'left_foot_contact': [float(x[0] > 0.1) for x in self.traj_data['obs']['sensor_observation_left_foot_touch']],
+            'right_foot_contact': [float(x[0] > 0.1) for x in self.traj_data['obs']['sensor_observation_right_foot_touch']]
         }
 
         self.plots_need_update = True
