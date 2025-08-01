@@ -121,6 +121,10 @@ class ModelProvider(ModelProviderABC):
                 set_motion('wave')
             elif key == 'c':
                 set_motion('pickup')
+            elif key == 'v':
+                set_motion('wild_walk')
+            elif key == 'b':
+                set_motion('zombie_walk')
             # Test motion bindings
             elif key == '1':
                 set_motion('test_rsp')  # Right shoulder pitch

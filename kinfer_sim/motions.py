@@ -307,11 +307,232 @@ def create_pickup(dt: float = 0.01) -> Motion:
     ]
     return Motion(keyframes, dt=dt)
 
+def create_wild_walk(dt: float = 0.01) -> Motion:
+    """Creates a wild walking motion with extreme arm movements."""
+    keyframes = [
+        Keyframe(
+            time=0.0,
+            positions={
+                "dof_right_shoulder_pitch_03": 0.0,
+                "dof_right_shoulder_roll_03": 0.0,
+                "dof_right_shoulder_yaw_02": 0.0,
+                "dof_right_elbow_02": 0.0,
+                "dof_left_shoulder_pitch_03": 0.0,
+                "dof_left_shoulder_roll_03": 0.0,
+                "dof_left_shoulder_yaw_02": 0.0,
+                "dof_left_elbow_02": 0.0,
+            },
+            commands={
+                "xvel": 0.0,
+                "yvel": 0.0,
+                "angvel": 0.0,
+            }
+        ),
+        # Start moving forward and spin while raising arms
+        Keyframe(
+            time=1.0,
+            positions={
+                "dof_right_shoulder_pitch_03": math.radians(-135.0),  # Extreme up and back
+                "dof_right_shoulder_roll_03": math.radians(-90.0),    # Out to side
+                "dof_right_shoulder_yaw_02": math.radians(90.0),      # Rotated forward
+                "dof_right_elbow_02": math.radians(120.0),           # Sharp bend
+                "dof_left_shoulder_pitch_03": math.radians(135.0),    # Mirror of right
+                "dof_left_shoulder_roll_03": math.radians(90.0),
+                "dof_left_shoulder_yaw_02": math.radians(-90.0),
+                "dof_left_elbow_02": math.radians(-120.0),
+            },
+            commands={
+                "xvel": 0.5,      # Move forward
+                "yvel": 0.0,
+                "angvel": 1.0,    # Spin clockwise
+            }
+        ),
+        # Move sideways while windmilling arms
+        Keyframe(
+            time=2.0,
+            positions={
+                "dof_right_shoulder_pitch_03": math.radians(90.0),    # Forward
+                "dof_right_shoulder_roll_03": math.radians(45.0),     # Diagonal up
+                "dof_right_shoulder_yaw_02": math.radians(-90.0),     # Rotated back
+                "dof_right_elbow_02": math.radians(-90.0),           # Sharp bend opposite
+                "dof_left_shoulder_pitch_03": math.radians(-90.0),    # Mirror
+                "dof_left_shoulder_roll_03": math.radians(-45.0),
+                "dof_left_shoulder_yaw_02": math.radians(90.0),
+                "dof_left_elbow_02": math.radians(90.0),
+            },
+            commands={
+                "xvel": 0.0,
+                "yvel": 0.5,      # Move right
+                "angvel": -1.0,   # Spin counter-clockwise
+            }
+        ),
+        # Diagonal movement with arms in maximum angles
+        Keyframe(
+            time=3.0,
+            positions={
+                "dof_right_shoulder_pitch_03": math.radians(-180.0),  # Maximum back
+                "dof_right_shoulder_roll_03": math.radians(-120.0),   # Maximum out
+                "dof_right_shoulder_yaw_02": math.radians(180.0),     # Maximum rotation
+                "dof_right_elbow_02": math.radians(145.0),           # Maximum bend
+                "dof_left_shoulder_pitch_03": math.radians(180.0),    # Mirror maxima
+                "dof_left_shoulder_roll_03": math.radians(120.0),
+                "dof_left_shoulder_yaw_02": math.radians(-180.0),
+                "dof_left_elbow_02": math.radians(-145.0),
+            },
+            commands={
+                "xvel": 0.5,      # Move diagonal
+                "yvel": -0.5,     # Move diagonal
+                "angvel": 2.0,    # Fast spin
+            }
+        ),
+        # Return to neutral
+        Keyframe(
+            time=4.0,
+            positions={
+                "dof_right_shoulder_pitch_03": 0.0,
+                "dof_right_shoulder_roll_03": 0.0,
+                "dof_right_shoulder_yaw_02": 0.0,
+                "dof_right_elbow_02": 0.0,
+                "dof_left_shoulder_pitch_03": 0.0,
+                "dof_left_shoulder_roll_03": 0.0,
+                "dof_left_shoulder_yaw_02": 0.0,
+                "dof_left_elbow_02": 0.0,
+            },
+            commands={
+                "xvel": 0.0,
+                "yvel": 0.0,
+                "angvel": 0.0,
+            }
+        ),
+    ]
+    return Motion(keyframes, dt=dt)
+
+def create_zombie_walk(dt: float = 0.01) -> Motion:
+    """Creates a classic zombie shambling motion with stiff arms."""
+    keyframes = [
+        # Start pose - classic zombie arms out
+        Keyframe(
+            time=0.0,
+            positions={
+                "dof_right_shoulder_pitch_03": math.radians(30.0),    # Arms forward
+                "dof_right_shoulder_roll_03": math.radians(-30.0),    # Slightly out
+                "dof_right_shoulder_yaw_02": math.radians(-20.0),     # Rotated down
+                "dof_right_elbow_02": math.radians(-10.0),           # Slightly bent
+                "dof_right_wrist_00": math.radians(-30.0),           # Limp wrist
+                "dof_left_shoulder_pitch_03": math.radians(30.0),
+                "dof_left_shoulder_roll_03": math.radians(30.0),
+                "dof_left_shoulder_yaw_02": math.radians(20.0),
+                "dof_left_elbow_02": math.radians(10.0),
+                "dof_left_wrist_00": math.radians(30.0),
+                "base_pitch": math.radians(15.0),                     # Leaning forward
+            },
+            commands={
+                "xvel": 0.0,
+                "yvel": 0.0,
+                "angvel": 0.0,
+            }
+        ),
+        # Shamble right with tilt
+        Keyframe(
+            time=1.0,
+            positions={
+                "dof_right_shoulder_pitch_03": math.radians(45.0),
+                "dof_right_shoulder_roll_03": math.radians(-40.0),
+                "dof_right_shoulder_yaw_02": math.radians(-30.0),
+                "dof_right_elbow_02": math.radians(-15.0),
+                "dof_right_wrist_00": math.radians(-40.0),
+                "dof_left_shoulder_pitch_03": math.radians(20.0),
+                "dof_left_shoulder_roll_03": math.radians(20.0),
+                "dof_left_shoulder_yaw_02": math.radians(10.0),
+                "dof_left_elbow_02": math.radians(5.0),
+                "dof_left_wrist_00": math.radians(20.0),
+                "base_roll": math.radians(10.0),                      # Tilt right
+                "base_pitch": math.radians(20.0),
+            },
+            commands={
+                "xvel": 0.2,                                         # Slow forward
+                "yvel": 0.1,                                         # Drift right
+                "angvel": -0.2,                                      # Slight turn
+            }
+        ),
+        # Shamble left with tilt
+        Keyframe(
+            time=2.0,
+            positions={
+                "dof_right_shoulder_pitch_03": math.radians(20.0),
+                "dof_right_shoulder_roll_03": math.radians(-20.0),
+                "dof_right_shoulder_yaw_02": math.radians(-10.0),
+                "dof_right_elbow_02": math.radians(-5.0),
+                "dof_right_wrist_00": math.radians(-20.0),
+                "dof_left_shoulder_pitch_03": math.radians(45.0),
+                "dof_left_shoulder_roll_03": math.radians(40.0),
+                "dof_left_shoulder_yaw_02": math.radians(30.0),
+                "dof_left_elbow_02": math.radians(15.0),
+                "dof_left_wrist_00": math.radians(40.0),
+                "base_roll": math.radians(-10.0),                     # Tilt left
+                "base_pitch": math.radians(20.0),
+            },
+            commands={
+                "xvel": 0.2,
+                "yvel": -0.1,                                        # Drift left
+                "angvel": 0.2,
+            }
+        ),
+        # Lunge forward
+        Keyframe(
+            time=2.5,
+            positions={
+                "dof_right_shoulder_pitch_03": math.radians(60.0),    # Arms reach forward
+                "dof_right_shoulder_roll_03": math.radians(-45.0),
+                "dof_right_shoulder_yaw_02": math.radians(-20.0),
+                "dof_right_elbow_02": math.radians(-5.0),
+                "dof_right_wrist_00": math.radians(-45.0),
+                "dof_left_shoulder_pitch_03": math.radians(60.0),
+                "dof_left_shoulder_roll_03": math.radians(45.0),
+                "dof_left_shoulder_yaw_02": math.radians(20.0),
+                "dof_left_elbow_02": math.radians(5.0),
+                "dof_left_wrist_00": math.radians(45.0),
+                "base_pitch": math.radians(30.0),                     # Strong forward lean
+            },
+            commands={
+                "xvel": 0.4,                                         # Faster lunge
+                "yvel": 0.0,
+                "angvel": 0.0,
+            }
+        ),
+        # Return to start pose with slight variation
+        Keyframe(
+            time=3.0,
+            positions={
+                "dof_right_shoulder_pitch_03": math.radians(35.0),
+                "dof_right_shoulder_roll_03": math.radians(-35.0),
+                "dof_right_shoulder_yaw_02": math.radians(-25.0),
+                "dof_right_elbow_02": math.radians(-15.0),
+                "dof_right_wrist_00": math.radians(-35.0),
+                "dof_left_shoulder_pitch_03": math.radians(35.0),
+                "dof_left_shoulder_roll_03": math.radians(35.0),
+                "dof_left_shoulder_yaw_02": math.radians(25.0),
+                "dof_left_elbow_02": math.radians(15.0),
+                "dof_left_wrist_00": math.radians(35.0),
+                "base_roll": math.radians(0.0),
+                "base_pitch": math.radians(15.0),
+            },
+            commands={
+                "xvel": 0.1,                                         # Slow again
+                "yvel": 0.0,
+                "angvel": 0.0,
+            }
+        ),
+    ]
+    return Motion(keyframes, dt=dt)
+
 # Dictionary mapping motion names to their creation functions
 MOTIONS = {
     'wave': create_wave,
     'salute': create_salute,
     'pickup': create_pickup,
+    'wild_walk': create_wild_walk,
+    'zombie_walk': create_zombie_walk,
     # Test motions - automatically generate test functions for each joint
     **{
         f'test_{"".join(word[0].lower() for word in joint_name.split("_")[1:-1])}': 
