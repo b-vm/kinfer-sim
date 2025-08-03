@@ -125,6 +125,11 @@ class ModelProvider(ModelProviderABC):
                 set_motion('wild_walk')
             elif key == 'b':
                 set_motion('zombie_walk')
+            elif key == 'n':
+                set_motion('pirouette')
+            elif key == 'm':
+                set_motion('backflip')
+
             # Test motion bindings
             elif key == '1':
                 set_motion('test_rsp')  # Right shoulder pitch
