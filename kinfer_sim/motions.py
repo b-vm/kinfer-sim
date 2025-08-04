@@ -705,6 +705,349 @@ def create_backflip(dt: float = 0.01) -> Motion:
     ]
     return Motion(keyframes, dt=dt)
 
+def create_boxing(dt: float = 0.01) -> Motion:
+    """Creates a boxing motion sequence."""
+    keyframes = [
+        # Start neutral
+        Keyframe(
+            time=0.0,
+            positions={},
+            commands={}
+        ),        
+        # Raise guard - walk forward
+        Keyframe(
+            time=0.2,
+            positions={
+                # Right arm
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),  # Forward and up
+                "dof_right_shoulder_roll_03": math.radians(15.0),   # Slightly inward
+                "dof_right_shoulder_yaw_02": math.radians(30.0),    # Rotate in
+                "dof_right_elbow_02": math.radians(30.0),         # Bent up
+                
+                # Left arm
+                "dof_left_shoulder_pitch_03": math.radians(55.0),   # Forward and up
+                "dof_left_shoulder_roll_03": math.radians(-15.0),   # Slightly inward
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),    # Rotate in
+                "dof_left_elbow_02": math.radians(-30.0),         # Bent up
+                
+                # Slight forward lean
+                "base_pitch": math.radians(10.0),
+            },
+            commands={
+                "xvel": 0.2,
+            }
+        ),
+        # Hold guard
+        Keyframe(
+            time=1.8,
+            positions={
+                # Right arm
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(30.0),
+                
+                # Left arm
+                "dof_left_shoulder_pitch_03": math.radians(55.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(-30.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}
+        ),
+        # Left punch land
+        Keyframe(
+            time=1.81,
+            positions={
+                # Right arm stays in guard
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(30.0),
+                
+                # Left arm prepares punch
+                "dof_left_shoulder_pitch_03": math.radians(90.0),      # extend
+                "dof_left_shoulder_roll_03": math.radians(-15.0),    # Keep tight to body
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),     # Natural rotation
+                "dof_left_elbow_02": math.radians(80.0),           # straight
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}
+        ),
+        # Left punch hold
+        Keyframe(
+            time=2.0,
+            positions={
+                # Right arm stays in guard
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(30.0),
+                
+                # Left arm 
+                "dof_left_shoulder_pitch_03": math.radians(90.0),      # extend
+                "dof_left_shoulder_roll_03": math.radians(-15.0),    # Keep tight to body
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),     # Natural rotation
+                "dof_left_elbow_02": math.radians(80.0),           # straight
+                
+                "base_pitch": math.radians(10.0),                  
+            },
+            commands={}
+        ),
+        # Return to guard
+        Keyframe(
+            time=2.2,
+            positions={
+                # Right arm
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(30.0),
+                
+                # Left arm
+                "dof_left_shoulder_pitch_03": math.radians(55.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(-30.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}
+        ),
+        # Hold guard briefly
+        Keyframe(
+            time=2.5,
+            positions={
+                # Right arm
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(30.0),
+                
+                # Left arm
+                "dof_left_shoulder_pitch_03": math.radians(55.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(-30.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}
+        ),
+        # Right punch land
+        Keyframe(
+            time=2.51,
+            positions={
+                # Right arm extends
+                "dof_right_shoulder_pitch_03": math.radians(-90.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(-80.0),
+                
+                # Left arm stays in guard
+                "dof_left_shoulder_pitch_03": math.radians(55.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(-30.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}
+        ),
+        # Right punch hold
+        Keyframe(
+            time=2.7,
+            positions={
+                # Right arm extended
+                "dof_right_shoulder_pitch_03": math.radians(-90.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(-80.0),
+                
+                # Left arm stays in guard
+                "dof_left_shoulder_pitch_03": math.radians(55.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(-30.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}
+        ),
+        # Return to guard and start sideways movement
+        Keyframe(
+            time=2.9,
+            positions={
+                # Right arm
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(30.0),
+                
+                # Left arm
+                "dof_left_shoulder_pitch_03": math.radians(55.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(-30.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={
+                "yvel": 0.3,      # Start moving sideways
+                "angvel": -0.8,    # Start rotating
+            }
+        ),
+        # stop movement, hold guard
+        Keyframe(
+            time=4.6,
+            positions={
+                # Maintain guard position during movement
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(30.0),
+                
+                "dof_left_shoulder_pitch_03": math.radians(55.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(-30.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}
+        ),
+        # Stop movement, right punch
+        Keyframe(
+            time=4.61,
+            positions={
+                # Right arm extends
+                "dof_right_shoulder_pitch_03": math.radians(-90.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(-80.0),
+                
+                # Left arm stays in guard
+                "dof_left_shoulder_pitch_03": math.radians(55.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(-30.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}  # Stop moving
+        ),
+        # hold right punch
+        Keyframe(
+            time=4.8,
+            positions={
+                # Right arm guard
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(-80.0),
+                
+                # Left arm stays in guard
+                "dof_left_shoulder_pitch_03": math.radians(55.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(-30.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}
+        ),
+        # back to guard
+        Keyframe(
+            time=5.0,
+            positions={
+                # Right arm guard
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(30.0),
+                
+                # Left arm
+                "dof_left_shoulder_pitch_03": math.radians(55.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(-30.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}
+        ),
+        # left punch land
+        Keyframe(
+            time=5.01,
+            positions={
+                # Right arm guard
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),   
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(30.0),
+                
+                # Left arm extends
+                "dof_left_shoulder_pitch_03": math.radians(90.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(80.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}
+        ),
+        # left punch hold
+        Keyframe(
+            time=5.2,
+            positions={
+                # Right arm guard
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(30.0),
+                
+                # Left arm extends
+                "dof_left_shoulder_pitch_03": math.radians(90.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(80.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}
+        ),
+        # Final return to guard
+        Keyframe(
+            time=5.4,
+            positions={
+                # Right arm
+                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                "dof_right_shoulder_roll_03": math.radians(15.0),
+                "dof_right_shoulder_yaw_02": math.radians(30.0),
+                "dof_right_elbow_02": math.radians(30.0),
+                
+                # Left arm
+                "dof_left_shoulder_pitch_03": math.radians(55.0),
+                "dof_left_shoulder_roll_03": math.radians(-15.0),
+                "dof_left_shoulder_yaw_02": math.radians(-30.0),
+                "dof_left_elbow_02": math.radians(-30.0),
+                
+                "base_pitch": math.radians(10.0),
+            },
+            commands={}
+        ),
+        # empty keyframe interpolate back to start
+        Keyframe(
+            time=5.6,
+            positions={},
+            commands={}
+        ),
+    ]
+    return Motion(keyframes, dt=dt)
+
 # Dictionary mapping motion names to their creation functions
 MOTIONS = {
     'wave': create_wave,
@@ -714,6 +1057,7 @@ MOTIONS = {
     'zombie_walk': create_zombie_walk,
     'pirouette': create_pirouette,
     'backflip': create_backflip,
+    'boxing': create_boxing,  # Add the new boxing motion
     # Test motions - automatically generate test functions for each joint
     **{
         f'test_{"".join(word[0].lower() for word in joint_name.split("_")[1:-1])}': 

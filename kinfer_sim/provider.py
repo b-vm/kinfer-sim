@@ -129,6 +129,8 @@ class ModelProvider(ModelProviderABC):
                 set_motion('pirouette')
             elif key == 'm':
                 set_motion('backflip')
+            elif key == ',':
+                set_motion('boxing')
 
             # Test motion bindings
             elif key == '1':
