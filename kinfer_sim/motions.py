@@ -730,7 +730,6 @@ def create_boxing(dt: float = 0.01) -> Motion:
                 "dof_left_shoulder_yaw_02": math.radians(-30.0),    # Rotate in
                 "dof_left_elbow_02": math.radians(-30.0),         # Bent up
                 
-                # Slight forward lean
                 "base_pitch": math.radians(10.0),
             },
             commands={
@@ -768,10 +767,10 @@ def create_boxing(dt: float = 0.01) -> Motion:
                 "dof_right_elbow_02": math.radians(30.0),
                 
                 # Left arm prepares punch
-                "dof_left_shoulder_pitch_03": math.radians(90.0),      # extend
+                "dof_left_shoulder_pitch_03": math.radians(100.0),      # extend
                 "dof_left_shoulder_roll_03": math.radians(-15.0),    # Keep tight to body
                 "dof_left_shoulder_yaw_02": math.radians(-30.0),     # Natural rotation
-                "dof_left_elbow_02": math.radians(80.0),           # straight
+                "dof_left_elbow_02": math.radians(85.0),           # straight
                 
                 "base_pitch": math.radians(10.0),
             },
@@ -788,10 +787,10 @@ def create_boxing(dt: float = 0.01) -> Motion:
                 "dof_right_elbow_02": math.radians(30.0),
                 
                 # Left arm 
-                "dof_left_shoulder_pitch_03": math.radians(90.0),      # extend
+                "dof_left_shoulder_pitch_03": math.radians(100.0),      # extend
                 "dof_left_shoulder_roll_03": math.radians(-15.0),    # Keep tight to body
                 "dof_left_shoulder_yaw_02": math.radians(-30.0),     # Natural rotation
-                "dof_left_elbow_02": math.radians(80.0),           # straight
+                "dof_left_elbow_02": math.radians(85.0),           # straight
                 
                 "base_pitch": math.radians(10.0),                  
             },
@@ -842,10 +841,10 @@ def create_boxing(dt: float = 0.01) -> Motion:
             time=2.51,
             positions={
                 # Right arm extends
-                "dof_right_shoulder_pitch_03": math.radians(-90.0),
+                "dof_right_shoulder_pitch_03": math.radians(-100.0),
                 "dof_right_shoulder_roll_03": math.radians(15.0),
                 "dof_right_shoulder_yaw_02": math.radians(30.0),
-                "dof_right_elbow_02": math.radians(-80.0),
+                "dof_right_elbow_02": math.radians(-85.0),
                 
                 # Left arm stays in guard
                 "dof_left_shoulder_pitch_03": math.radians(55.0),
@@ -862,10 +861,10 @@ def create_boxing(dt: float = 0.01) -> Motion:
             time=2.7,
             positions={
                 # Right arm extended
-                "dof_right_shoulder_pitch_03": math.radians(-90.0),
+                "dof_right_shoulder_pitch_03": math.radians(-100.0),
                 "dof_right_shoulder_roll_03": math.radians(15.0),
                 "dof_right_shoulder_yaw_02": math.radians(30.0),
-                "dof_right_elbow_02": math.radians(-80.0),
+                "dof_right_elbow_02": math.radians(-85.0),
                 
                 # Left arm stays in guard
                 "dof_left_shoulder_pitch_03": math.radians(55.0),
@@ -919,15 +918,15 @@ def create_boxing(dt: float = 0.01) -> Motion:
             },
             commands={}
         ),
-        # Stop movement, right punch
+        # Right punch land
         Keyframe(
             time=4.61,
             positions={
                 # Right arm extends
-                "dof_right_shoulder_pitch_03": math.radians(-90.0),
+                "dof_right_shoulder_pitch_03": math.radians(-100.0),
                 "dof_right_shoulder_roll_03": math.radians(15.0),
                 "dof_right_shoulder_yaw_02": math.radians(30.0),
-                "dof_right_elbow_02": math.radians(-80.0),
+                "dof_right_elbow_02": math.radians(-85.0),
                 
                 # Left arm stays in guard
                 "dof_left_shoulder_pitch_03": math.radians(55.0),
@@ -937,17 +936,17 @@ def create_boxing(dt: float = 0.01) -> Motion:
                 
                 "base_pitch": math.radians(10.0),
             },
-            commands={}  # Stop moving
+            commands={}
         ),
         # hold right punch
         Keyframe(
             time=4.8,
             positions={
-                # Right arm guard
-                "dof_right_shoulder_pitch_03": math.radians(-55.0),
+                # Right arm extended
+                "dof_right_shoulder_pitch_03": math.radians(-100.0),
                 "dof_right_shoulder_roll_03": math.radians(15.0),
                 "dof_right_shoulder_yaw_02": math.radians(30.0),
-                "dof_right_elbow_02": math.radians(-80.0),
+                "dof_right_elbow_02": math.radians(-85.0),
                 
                 # Left arm stays in guard
                 "dof_left_shoulder_pitch_03": math.radians(55.0),
@@ -990,10 +989,10 @@ def create_boxing(dt: float = 0.01) -> Motion:
                 "dof_right_elbow_02": math.radians(30.0),
                 
                 # Left arm extends
-                "dof_left_shoulder_pitch_03": math.radians(90.0),
+                "dof_left_shoulder_pitch_03": math.radians(100.0),
                 "dof_left_shoulder_roll_03": math.radians(-15.0),
                 "dof_left_shoulder_yaw_02": math.radians(-30.0),
-                "dof_left_elbow_02": math.radians(80.0),
+                "dof_left_elbow_02": math.radians(85.0),
                 
                 "base_pitch": math.radians(10.0),
             },
@@ -1010,10 +1009,10 @@ def create_boxing(dt: float = 0.01) -> Motion:
                 "dof_right_elbow_02": math.radians(30.0),
                 
                 # Left arm extends
-                "dof_left_shoulder_pitch_03": math.radians(90.0),
+                "dof_left_shoulder_pitch_03": math.radians(100.0),
                 "dof_left_shoulder_roll_03": math.radians(-15.0),
                 "dof_left_shoulder_yaw_02": math.radians(-30.0),
-                "dof_left_elbow_02": math.radians(80.0),
+                "dof_left_elbow_02": math.radians(85.0),
                 
                 "base_pitch": math.radians(10.0),
             },
