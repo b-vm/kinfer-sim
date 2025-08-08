@@ -1,9 +1,9 @@
 """Defines motion sequences for robot arm movements."""
 
 import math
-from dataclasses import dataclass
 from typing import Dict, List, Tuple
 import numpy as np
+import attrs
 
 # Define the joint names and their default positions for KBOT
 COMMANDS = [
@@ -27,12 +27,12 @@ POSITIONS = [
     "dof_left_wrist_00"
 ]
 
-@dataclass
+@attrs.define
 class Keyframe:
     """A keyframe in a motion sequence."""
     time: float
-    positions: Dict[str, float]
-    commands: Dict[str, float]
+    positions: Dict[str, float] = attrs.field(factory=dict)
+    commands: Dict[str, float] = attrs.field(factory=dict)
 
 class Motion:
     """Represents a sequence of arm motions with keyframes and interpolation."""
@@ -138,10 +138,8 @@ def create_wave(dt: float = 0.01) -> Motion:
             time=0.0,
             positions={
                 "dof_right_shoulder_roll_03": math.radians(-45.0),
-                "dof_right_shoulder_yaw_02": 0.0,
                 "dof_right_elbow_02": math.radians(90.0),
-            },
-            commands={}
+            }
         ),
         Keyframe(
             time=0.5,
@@ -149,8 +147,7 @@ def create_wave(dt: float = 0.01) -> Motion:
                 "dof_right_shoulder_roll_03": math.radians(-45.0),
                 "dof_right_shoulder_yaw_02": math.radians(45.0),
                 "dof_right_elbow_02": math.radians(90.0),
-            },
-            commands={}
+            }
         ),
         Keyframe(
             time=1.0,
@@ -158,17 +155,14 @@ def create_wave(dt: float = 0.01) -> Motion:
                 "dof_right_shoulder_roll_03": math.radians(-45.0),
                 "dof_right_shoulder_yaw_02": math.radians(-45.0),
                 "dof_right_elbow_02": math.radians(90.0),
-            },
-            commands={}
+            }
         ),
         Keyframe(
             time=1.5,
             positions={
                 "dof_right_shoulder_roll_03": math.radians(-10.0),
-                "dof_right_shoulder_yaw_02": 0.0,
                 "dof_right_elbow_02": math.radians(90.0),
-            },
-            commands={}
+            }
         ),
     ]
     return Motion(keyframes, dt=dt)
@@ -181,32 +175,28 @@ def create_salute(dt: float = 0.01) -> Motion:
             positions={
                 "dof_right_shoulder_roll_03": math.radians(-90.0),
                 "dof_right_elbow_02": math.radians(0.0),
-            },
-            commands={}
+            }
         ),
         Keyframe(
             time=1.1,
             positions={
                 "dof_right_shoulder_roll_03": math.radians(-90.0),
                 "dof_right_elbow_02": math.radians(90.0),
-            },
-            commands={}
+            }
         ),
         Keyframe(
             time=2.1,
             positions={
                 "dof_right_shoulder_roll_03": math.radians(-90.0),
                 "dof_right_elbow_02": math.radians(90.0),
-            },
-            commands={}
+            }
         ),
         Keyframe(
             time=2.6,
             positions={
                 "dof_right_shoulder_roll_03": math.radians(-10.0),
                 "dof_right_elbow_02": math.radians(0.0),
-            },
-            commands={}
+            }
         ),
     ]
     return Motion(keyframes, dt=dt)
@@ -225,8 +215,7 @@ def create_pickup(dt: float = 0.01) -> Motion:
                 "dof_left_shoulder_roll_03": math.radians(-10.0),
                 "dof_left_elbow_02": 0.0,
                 "dof_left_wrist_00": 0.0,
-            },
-            commands={}
+            }
         ),
         Keyframe(
             time=0.5,
@@ -241,7 +230,6 @@ def create_pickup(dt: float = 0.01) -> Motion:
                 "dof_left_wrist_00": 0.0,
                 "base_pitch": math.radians(15.0),
             },
-            commands={}
         ),
         Keyframe(
             time=1.0,
@@ -257,7 +245,6 @@ def create_pickup(dt: float = 0.01) -> Motion:
                 "base_height": -0.1,
                 "base_pitch": math.radians(30.0),
             },
-            commands={}
         ),
         Keyframe(
             time=1.3,
@@ -273,7 +260,6 @@ def create_pickup(dt: float = 0.01) -> Motion:
                 "base_height": -0.1,
                 "base_pitch": math.radians(30.0),
             },
-            commands={}
         ),
         Keyframe(
             time=1.8,
@@ -288,7 +274,6 @@ def create_pickup(dt: float = 0.01) -> Motion:
                 "dof_left_wrist_00": math.radians(-30.0),
                 "base_pitch": math.radians(15.0),
             },
-            commands={}
         ),
         Keyframe(
             time=2.3,
@@ -302,7 +287,6 @@ def create_pickup(dt: float = 0.01) -> Motion:
                 "dof_left_elbow_02": 0.0,
                 "dof_left_wrist_00": 0.0,
             },
-            commands={}
         ),
     ]
     return Motion(keyframes, dt=dt)
@@ -321,11 +305,6 @@ def create_wild_walk(dt: float = 0.01) -> Motion:
                 "dof_left_shoulder_roll_03": 0.0,
                 "dof_left_shoulder_yaw_02": 0.0,
                 "dof_left_elbow_02": 0.0,
-            },
-            commands={
-                "xvel": 0.0,
-                "yvel": 0.0,
-                "angvel": 0.0,
             }
         ),
         Keyframe(
@@ -382,24 +361,7 @@ def create_wild_walk(dt: float = 0.01) -> Motion:
                 "angvel": 2.0,
             }
         ),
-        Keyframe(
-            time=4.0,
-            positions={
-                "dof_right_shoulder_pitch_03": 0.0,
-                "dof_right_shoulder_roll_03": 0.0,
-                "dof_right_shoulder_yaw_02": 0.0,
-                "dof_right_elbow_02": 0.0,
-                "dof_left_shoulder_pitch_03": 0.0,
-                "dof_left_shoulder_roll_03": 0.0,
-                "dof_left_shoulder_yaw_02": 0.0,
-                "dof_left_elbow_02": 0.0,
-            },
-            commands={
-                "xvel": 0.0,
-                "yvel": 0.0,
-                "angvel": 0.0,
-            }
-        ),
+        Keyframe(time=4.0),
     ]
     return Motion(keyframes, dt=dt)
 
@@ -591,11 +553,6 @@ def create_backflip(dt: float = 0.01) -> Motion:
                 "dof_left_shoulder_pitch_03": 0.0,
                 "base_height": 0.0,
                 "base_pitch": 0.0,
-            },
-            commands={
-                "xvel": 0.0,
-                "yvel": 0.0,
-                "angvel": 0.0,
             }
         ),
         # Mid squat, arms starting to rise
@@ -606,11 +563,6 @@ def create_backflip(dt: float = 0.01) -> Motion:
                 "dof_left_shoulder_pitch_03": math.radians(45.0),
                 "base_height": -0.15,
                 "base_pitch": 0.0,
-            },
-            commands={
-                "xvel": 0.0,
-                "yvel": 0.0,
-                "angvel": 0.0,
             }
         ),
         # Deep squat, arms forward
@@ -621,11 +573,6 @@ def create_backflip(dt: float = 0.01) -> Motion:
                 "dof_left_shoulder_pitch_03": math.radians(90.0),
                 "base_height": -0.3,
                 "base_pitch": 0.0,
-            },
-            commands={
-                "xvel": 0.0,
-                "yvel": 0.0,
-                "angvel": 0.0,
             }
         ),
         Keyframe(
@@ -650,11 +597,6 @@ def create_backflip(dt: float = 0.01) -> Motion:
                 "dof_left_shoulder_pitch_03": math.radians(-90.0),
                 "base_height": 0.4,
                 "base_pitch": math.radians(-50.0),
-            },
-            commands={
-                "xvel": 0.0,
-                "yvel": 0.0,
-                "angvel": 0.0,
             }
         ),
         # Peak of jump, arms coming forward to drive flip
@@ -665,11 +607,6 @@ def create_backflip(dt: float = 0.01) -> Motion:
                 "dof_left_shoulder_pitch_03": math.radians(-135.0),
                 "base_height": 0.4,
                 "base_pitch": math.radians(-180.0),
-            },
-            commands={
-                "xvel": 0.0,
-                "yvel": 0.0,
-                "angvel": 0.0,
             }
         ),
         # Complete rotation, arms up to spot landing
@@ -680,11 +617,6 @@ def create_backflip(dt: float = 0.01) -> Motion:
                 "dof_left_shoulder_pitch_03": math.radians(-90.0),
                 "base_height": 0.2,
                 "base_pitch": math.radians(-340.0),
-            },
-            commands={
-                "xvel": 0.0,
-                "yvel": 0.0,
-                "angvel": 0.0,
             }
         ),
         # Landing squat, arms forward for balance
@@ -695,11 +627,6 @@ def create_backflip(dt: float = 0.01) -> Motion:
                 "dof_left_shoulder_pitch_03": math.radians(45.0),
                 "base_height": -0.3,
                 "base_pitch": math.radians(-360.0),
-            },
-            commands={
-                "xvel": 0.0,
-                "yvel": 0.0,
-                "angvel": 0.0,
             }
         ),
     ]
@@ -709,11 +636,8 @@ def create_boxing(dt: float = 0.01) -> Motion:
     """Creates a boxing motion sequence."""
     keyframes = [
         # Start neutral
-        Keyframe(
-            time=0.0,
-            positions={},
-            commands={}
-        ),        
+        Keyframe(time=0.0),
+        
         # Raise guard - walk forward
         Keyframe(
             time=0.2,
@@ -753,8 +677,7 @@ def create_boxing(dt: float = 0.01) -> Motion:
                 "dof_left_elbow_02": math.radians(-30.0),
                 
                 "base_pitch": math.radians(10.0),
-            },
-            commands={}
+            }
         ),
         # Left punch land
         Keyframe(
@@ -1047,7 +970,43 @@ def create_boxing(dt: float = 0.01) -> Motion:
     ]
     return Motion(keyframes, dt=dt)
 
-# Dictionary mapping motion names to their creation functions
+def create_cone_motion(dt: float = 0.01) -> Motion:
+    """Creates a conical motion by rotating base roll and pitch in a circular pattern."""
+    # Parameters for the cone motion
+    cone_angle = math.radians(15.0)  # Angle of the cone from vertical
+    duration = 4.0  # Total duration of one complete motion
+    
+    keyframes = []
+    num_keyframes = 16  # Number of points around the circle
+    
+    for i in range(num_keyframes + 1):  # +1 to close the circle
+        t = (i / num_keyframes) * duration
+        angle = (i / num_keyframes) * 2 * math.pi
+        
+        # Calculate roll and pitch to create circular motion
+        roll = cone_angle * math.sin(angle)
+        pitch = cone_angle * math.cos(angle)
+        
+        keyframes.append(
+            Keyframe(
+                time=t,
+                positions={
+                    "base_roll": roll,
+                    "base_pitch": pitch,
+                    # Add some arm movements to enhance the effect
+                    "dof_right_shoulder_pitch_03": math.radians(-45.0),
+                    "dof_right_shoulder_roll_03": math.radians(-30.0),
+                    "dof_right_elbow_02": math.radians(60.0),
+                    "dof_left_shoulder_pitch_03": math.radians(45.0),
+                    "dof_left_shoulder_roll_03": math.radians(30.0),
+                    "dof_left_elbow_02": math.radians(-60.0),
+                },
+            )
+        )
+    
+    return Motion(keyframes, dt=dt)
+
+
 MOTIONS = {
     'wave': create_wave,
     'salute': create_salute,
@@ -1056,7 +1015,8 @@ MOTIONS = {
     'zombie_walk': create_zombie_walk,
     'pirouette': create_pirouette,
     'backflip': create_backflip,
-    'boxing': create_boxing,  # Add the new boxing motion
+    'boxing': create_boxing,
+    'cone': create_cone_motion,
     # Test motions - automatically generate test functions for each joint
     **{
         f'test_{"".join(word[0].lower() for word in joint_name.split("_")[1:-1])}': 

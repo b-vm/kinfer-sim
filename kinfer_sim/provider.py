@@ -131,6 +131,8 @@ class ModelProvider(ModelProviderABC):
                 set_motion('backflip')
             elif key == ',':
                 set_motion('boxing')
+            elif key == '.':
+                set_motion('cone')
 
             # Test motion bindings
             elif key == '1':
