@@ -117,8 +117,8 @@ class RewardPlotter:
         for name in self.rewards.keys():
             make_plot(name)
 
-        # Setup command + obsplots
-        additional_metrics = ['feet_force_touch_observation', 'feet_contact_observation', 'linvel', 'angvel', 'base_height', 'xyorientation']
+        # Setup command + obs plots
+        additional_metrics = ['feet_force_touch_observation', 'feet_contact_observation', 'linvel', 'angvel', 'base_height', 'xyorientation', 'linacc', 'angacc']
         for metric in additional_metrics:
             make_plot(metric)
             self.plots[metric].addLegend()
@@ -134,6 +134,18 @@ class RewardPlotter:
                 self.curves[metric] = {
                     'wz_cmd': self.plots[metric].plot(pen=pg.mkPen('y', width=2, style=pg.QtCore.Qt.DashLine), name='ωz Command'),
                     'wz_real': self.plots[metric].plot(pen=pg.mkPen('y', width=2), name='ωz Actual'),
+                }
+            elif metric == 'linacc':
+                self.curves[metric] = {
+                    'x_acc': self.plots[metric].plot(pen=pg.mkPen('r', width=2), name='X Acc'),
+                    'y_acc': self.plots[metric].plot(pen=pg.mkPen('g', width=2), name='Y Acc'),
+                    'z_acc': self.plots[metric].plot(pen=pg.mkPen('b', width=2), name='Z Acc'),
+                }
+            elif metric == 'angacc':
+                self.curves[metric] = {
+                    'wx_acc': self.plots[metric].plot(pen=pg.mkPen('r', width=2), name='ωx Acc'),
+                    'wy_acc': self.plots[metric].plot(pen=pg.mkPen('g', width=2), name='ωy Acc'),
+                    'wz_acc': self.plots[metric].plot(pen=pg.mkPen('b', width=2), name='ωz Acc'),
                 }
             elif metric == 'base_height':
                 self.curves[metric] = {
@@ -217,7 +229,7 @@ class RewardPlotter:
             mjdata, obs_arrays = self.new_sim_data_queue.get_nowait()
 
             # mjdata
-            for key in ['qpos', 'qvel', 'xpos', 'xquat', 'ctrl', 'action']:
+            for key in ['qpos', 'qvel', 'qacc', 'xpos', 'xquat', 'ctrl', 'action']:
                 self.traj_data.setdefault(key, []).append(mjdata[key])
 
             # commands
@@ -346,6 +358,16 @@ class RewardPlotter:
             'left_foot_contact': [float(x[0] > 0.1) for x in self.traj_data['obs']['sensor_observation_left_foot_touch']],
             'right_foot_contact': [float(x[0] > 0.1) for x in self.traj_data['obs']['sensor_observation_right_foot_touch']]
         }
+        self.plot_data['linacc'] = {
+            'x_acc': [float(x[0]) for x in self.traj_data['qacc']],
+            'y_acc': [float(x[1]) for x in self.traj_data['qacc']],
+            'z_acc': [float(x[2]) for x in self.traj_data['qacc']],
+        }
+        self.plot_data['angacc'] = {
+            'wx_acc': [float(x[3]) for x in self.traj_data['qacc']],
+            'wy_acc': [float(x[4]) for x in self.traj_data['qacc']],
+            'wz_acc': [float(x[5]) for x in self.traj_data['qacc']],
+        }
 
         self.plots_need_update = True
 
@@ -391,6 +413,7 @@ class RewardPlotter:
         mjdata_copy = {
             'qpos': np.array(mjdata.qpos, copy=True),
             'qvel': np.array(mjdata.qvel, copy=True),
+            'qacc': np.array(mjdata.qacc, copy=True),
             'xpos': np.array(mjdata.xpos, copy=True),
             'xquat': np.array(mjdata.xquat, copy=True),
             'time': float(mjdata.time),
