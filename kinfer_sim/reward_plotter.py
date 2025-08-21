@@ -240,12 +240,7 @@ class RewardPlotter:
                     'arm_command': []
                 }
             unified_command = obs_arrays['command']
-            ucmd = np.concatenate([
-                unified_command[:3],
-                np.zeros(1), # BUG lack of actual heading causes issue with reward math
-                unified_command[3:],
-            ])
-            self.traj_data['command']['unified_command'].append(ucmd)
+            self.traj_data['command']['unified_command'].append(unified_command)
 
 
             wcmd = np.zeros(24)
@@ -345,13 +340,13 @@ class RewardPlotter:
         else:
             standard_height = self.rewards['BaseHeightReward'].standard_height
         self.plot_data['base_height'] = {
-            'base_height_cmd': [float(x[4]+standard_height) for x in self.traj_data['command']['unified_command']],
+            'base_height_cmd': [float(x[3]+standard_height) for x in self.traj_data['command']['unified_command']],
             'base_height_real': [float(x[1, 2]) for x in self.traj_data['xpos']]
         }
         self.plot_data['xyorientation'] = {
-            'roll_cmd': [float(x[5]) for x in self.traj_data['command']['unified_command']],
+            'roll_cmd': [float(x[4]) for x in self.traj_data['command']['unified_command']],
             # 'pitch_real': [float(x[0]) for x in self.traj_data['xquat'][:, 0]],
-            'pitch_cmd': [float(x[6]) for x in self.traj_data['command']['unified_command']],
+            'pitch_cmd': [float(x[5]) for x in self.traj_data['command']['unified_command']],
             # 'roll_real': [float(x[1]) for x in self.traj_data['xquat'][:, 1]]
         }
         self.plot_data['feet_contact_observation'] = {
