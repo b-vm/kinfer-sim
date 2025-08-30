@@ -993,13 +993,6 @@ def create_cone_motion(dt: float = 0.01) -> Motion:
                 positions={
                     "base_roll": roll,
                     "base_pitch": pitch,
-                    # Add some arm movements to enhance the effect
-                    "dof_right_shoulder_pitch_03": math.radians(-45.0),
-                    "dof_right_shoulder_roll_03": math.radians(-30.0),
-                    "dof_right_elbow_02": math.radians(60.0),
-                    "dof_left_shoulder_pitch_03": math.radians(45.0),
-                    "dof_left_shoulder_roll_03": math.radians(30.0),
-                    "dof_left_elbow_02": math.radians(-60.0),
                 },
             )
         )
