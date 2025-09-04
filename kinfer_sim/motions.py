@@ -242,7 +242,7 @@ def create_pickup(dt: float = 0.01) -> Motion:
                 "dof_left_shoulder_roll_03": math.radians(-20.0),
                 "dof_left_elbow_02": math.radians(45.0),
                 "dof_left_wrist_00": math.radians(-20.0),
-                "base_height": -0.1,
+                "base_height": -0.2,
                 "base_pitch": math.radians(30.0),
             },
         ),
@@ -257,7 +257,7 @@ def create_pickup(dt: float = 0.01) -> Motion:
                 "dof_left_shoulder_roll_03": math.radians(-20.0),
                 "dof_left_elbow_02": math.radians(90.0),
                 "dof_left_wrist_00": math.radians(-30.0),
-                "base_height": -0.1,
+                "base_height": -0.2,
                 "base_pitch": math.radians(30.0),
             },
         ),
@@ -999,6 +999,61 @@ def create_cone_motion(dt: float = 0.01) -> Motion:
     
     return Motion(keyframes, dt=dt)
 
+def create_squats(dt: float = 0.01) -> Motion:
+    """Creates a motion sequence of two squats."""
+    keyframes = [
+        Keyframe(
+            time=0.0,
+            positions={
+                "base_height": 0.0,
+            }
+        ),
+        Keyframe(
+            time=1.0,
+            positions={
+                "base_height": -0.25,
+            }
+        ),
+        Keyframe(
+            time=1.5,
+            positions={
+                "base_height": -0.25,
+            }
+        ),
+        Keyframe(
+            time=2.5,
+            positions={
+                "base_height": 0.0,
+            }
+        ),
+        Keyframe(
+            time=3.0,
+            positions={
+                "base_height": 0.0,
+            }
+        ),
+        Keyframe(
+            time=4.0,
+            positions={
+                "base_height": -0.25,
+            }
+        ),
+        Keyframe(
+            time=4.5,
+            positions={
+                "base_height": -0.25,
+            }
+        ),
+        Keyframe(
+            time=5.5,
+            positions={
+                "base_height": 0.0,
+                "base_pitch": 0.0,
+            }
+        ),
+    ]
+    return Motion(keyframes, dt=dt)
+
 
 MOTIONS = {
     'wave': create_wave,
@@ -1006,6 +1061,7 @@ MOTIONS = {
     'pickup': create_pickup,
     'wild_walk': create_wild_walk,
     'zombie_walk': create_zombie_walk,
+    'squats': create_squats,
     'pirouette': create_pirouette,
     'backflip': create_backflip,
     'boxing': create_boxing,
