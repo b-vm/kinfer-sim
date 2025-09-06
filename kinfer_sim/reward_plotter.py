@@ -96,7 +96,7 @@ class RewardPlotter:
             self.rewards = train.ZbotWalkingTask.get_rewards(self=None, physics_model=mujoco_model)
         else:
             raise ValueError(f"No walking task found in {path_to_train_file}")
-        self.rewards = {reward.__class__.__name__: reward for reward in self.rewards}
+        self.rewards = {"R_" + name: reward_fn for name, reward_fn in self.rewards.items()}
         print("\n=== Found Reward Classes ===")
         for i, (reward_name, reward) in enumerate(self.rewards.items(), 1):
             print(f"\n{i}. {reward_name}")
@@ -259,15 +259,15 @@ class RewardPlotter:
             # some obs
             if not 'obs' in self.traj_data:
                 self.traj_data['obs'] = {
-                    'sensor_observation_base_site_linvel': [],
-                    'sensor_observation_base_site_angvel': [],
-                    'sensor_observation_left_foot_touch': [],
-                    'sensor_observation_right_foot_touch': []
+                    'base_site_linvel': [],
+                    'base_site_angvel': [],
+                    'left_foot_touch': [],
+                    'right_foot_touch': []
                 }
-            self.traj_data['obs']['sensor_observation_base_site_linvel'].append(mjdata['base_site_linvel'])
-            self.traj_data['obs']['sensor_observation_base_site_angvel'].append(mjdata['base_site_angvel'])
-            self.traj_data['obs']['sensor_observation_left_foot_touch'].append(mjdata['left_foot_touch'])
-            self.traj_data['obs']['sensor_observation_right_foot_touch'].append(mjdata['right_foot_touch'])
+            self.traj_data['obs']['base_site_linvel'].append(mjdata['base_site_linvel'])
+            self.traj_data['obs']['base_site_angvel'].append(mjdata['base_site_angvel'])
+            self.traj_data['obs']['left_foot_touch'].append(mjdata['left_foot_touch'])
+            self.traj_data['obs']['right_foot_touch'].append(mjdata['right_foot_touch'])
 
         if not new_data:
             return False
@@ -318,12 +318,12 @@ class RewardPlotter:
         base_eulers = xax.quat_to_euler(jnp.stack(self.traj_data['xquat'])[:, 1, :])
         base_eulers = base_eulers.at[:, :2].set(0.0)
         heading_quats = xax.euler_to_quat(base_eulers)
-        local_frame_linvel = xax.rotate_vector_by_quat(jnp.stack(self.traj_data['obs']['sensor_observation_base_site_linvel']), heading_quats, inverse=True)
+        local_frame_linvel = xax.rotate_vector_by_quat(jnp.stack(self.traj_data['obs']['base_site_linvel']), heading_quats, inverse=True)
         local_frame_base_qvel = xax.rotate_vector_by_quat(jnp.stack(self.traj_data['qvel'])[:, :3], heading_quats, inverse=True)
 
         self.plot_data['feet_force_touch_observation'] = {
-            'left_foot_force': [float(x[0]) for x in self.traj_data['obs']['sensor_observation_left_foot_touch']],
-            'right_foot_force': [float(x[0]) for x in self.traj_data['obs']['sensor_observation_right_foot_touch']]
+            'left_foot_force': [float(x[0]) for x in self.traj_data['obs']['left_foot_touch']],
+            'right_foot_force': [float(x[0]) for x in self.traj_data['obs']['right_foot_touch']]
         }
         self.plot_data['linvel'] = {
             'x_cmd': [float(x[0]) for x in self.traj_data['command']['unified_command']],
@@ -333,12 +333,9 @@ class RewardPlotter:
         }
         self.plot_data['angvel'] = {
             'wz_cmd': [float(x[2]) for x in self.traj_data['command']['unified_command']],
-            'wz_real': [float(x[2]) for x in self.traj_data['obs']['sensor_observation_base_site_angvel']], # TODO BUG not correct
+            'wz_real': [float(x[2]) for x in self.traj_data['obs']['base_site_angvel']], # TODO BUG not correct
         }
-        if 'TerrainBaseHeightReward' in self.rewards:
-            standard_height = self.rewards['TerrainBaseHeightReward'].standard_height
-        else:
-            standard_height = self.rewards['BaseHeightReward'].standard_height
+        standard_height = self.rewards['R_base_height'].standard_height
         self.plot_data['base_height'] = {
             'base_height_cmd': [float(x[3]+standard_height) for x in self.traj_data['command']['unified_command']],
             'base_height_real': [float(x[1, 2]) for x in self.traj_data['xpos']]
@@ -350,8 +347,8 @@ class RewardPlotter:
             # 'roll_real': [float(x[1]) for x in self.traj_data['xquat'][:, 1]]
         }
         self.plot_data['feet_contact_observation'] = {
-            'left_foot_contact': [float(x[0] > 0.1) for x in self.traj_data['obs']['sensor_observation_left_foot_touch']],
-            'right_foot_contact': [float(x[0] > 0.1) for x in self.traj_data['obs']['sensor_observation_right_foot_touch']]
+            'left_foot_contact': [float(x[0] > 0.1) for x in self.traj_data['obs']['left_foot_touch']],
+            'right_foot_contact': [float(x[0] > 0.1) for x in self.traj_data['obs']['right_foot_touch']]
         }
         self.plot_data['linacc'] = {
             'x_acc': [float(x[0]) for x in self.traj_data['qacc']],
