@@ -133,6 +133,8 @@ class ModelProvider(ModelProviderABC):
                 set_motion('boxing')
             elif key == '.':
                 set_motion('cone')
+            elif key == '/':
+                set_motion('squats')
 
             # Test motion bindings
             elif key == '1':

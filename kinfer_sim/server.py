@@ -322,6 +322,11 @@ async def serve(config: ServerConfig) -> None:
             get_model_metadata(api, config.mujoco_model_name),
         )
 
+    # HACK for new kbot
+    model_dir = Path("/home/bart/kscale/kbot-joystick/robot/kbot-headless")
+    model_path = model_dir / "metadata.json"
+    model_metadata = RobotURDFMetadataOutput.model_validate_json(model_path.read_text())
+
     model_path = next(
         (
             path

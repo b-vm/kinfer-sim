@@ -305,7 +305,7 @@ class RewardPlotter:
         total_reward = np.zeros(len(self.traj_data['qpos']))
         for reward_name, reward in self.rewards.items():
             if reward_name in self.plot_data:
-                total_reward += np.array(self.plot_data[reward_name]) * reward.scale
+                total_reward += np.array(self.plot_data[reward_name]) * reward.scale.get_scale(0)
         self.plot_data['Total Reward'] = total_reward.tolist()
         
         # Adjust y-axis range for total reward plot
