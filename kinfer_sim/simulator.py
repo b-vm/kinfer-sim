@@ -317,7 +317,7 @@ class MujocoSimulator:
 
 
         for body_id in range(self._model.nbody):
-            print('body name: ', self._model.body(body_id).name, '  body_id: ', body_id, '  inertia: ', self._model.body_inertia[body_id], 'invweight0: ', self._model.body_invweight0[body_id])
+            print('body name: ', self._model.body(body_id).name, '  body_id: ', body_id, 'body pos: ', self._model.body_pos[body_id], 'body quat: ', self._model.body_quat[body_id])
                 # self._model.body_ipos[body_id] += [0, -0.00, 0]
                 # print('body name: ', self._model.body(body_id).name, '  body_id: ', body_id, '  ipos: ', self._model.body_ipos[body_id])
 
