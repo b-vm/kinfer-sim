@@ -87,12 +87,16 @@ class SimulationServer:
         model_path: str | Path,
         model_metadata: RobotURDFMetadataOutput,
         config: ServerConfig,
-        command_provider: KeyboardController | None,
         keyboard_listener: KeyboardListener,
     ) -> None:
         # Add control state
         self._paused = False
         self._control_queue = keyboard_listener.get_queue()
+        self._command_provider=KeyboardController(
+            keyboard_queue=keyboard_listener.get_queue(),
+            # TODO add policy command names somehow
+        ) if config.use_keyboard else None
+
 
         initial_quat_str = config.initial_quat
         if initial_quat_str is not None:
@@ -137,7 +141,6 @@ class SimulationServer:
         self._save_path = Path(config.save_path).expanduser().resolve()
         self._save_video = config.save_video
         self._save_logs = config.save_logs
-        self._command_provider = command_provider
         self._run_name = f"{Path(self._kinfer_path).stem}_sim_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         self._joint_names: list[str] = load_joint_names(self._kinfer_path)
         self._plots_w_joint_names: frozenset[str] = frozenset({"joint_angles", "joint_velocities", "action", "torque"})
@@ -297,7 +300,6 @@ async def serve(config: ServerConfig) -> None:
         model_path=model_path,
         model_metadata=model_metadata,
         config=config,
-        command_provider=KeyboardController(keyboard_listener.get_queue()) if config.use_keyboard else None,
         keyboard_listener=keyboard_listener,
     )
 
@@ -339,11 +341,12 @@ def load_joint_names(kinfer_path: str | Path) -> list[str]:
             metadata_file = tar.extractfile("metadata.json")
             if metadata_file is None:
                 raise FileNotFoundError("'metadata.json' not found in archive")
-            metadata = metadata_from_json(metadata_file.read().decode("utf-8"))
+            # metadata = metadata_from_json(metadata_file.read().decode("utf-8"))
+            metadata = json.loads(metadata_file.read().decode("utf-8"))
     except (tarfile.TarError, FileNotFoundError) as exc:
         raise ValueError(f"Could not read metadata from {kinfer_path}: {exc}") from exc
 
-    joint_names = getattr(metadata, "joint_names", None)
+    joint_names = metadata.get("joint_names", None)
     if not joint_names:
         raise ValueError(f"'joint_names' missing in metadata for {kinfer_path}")
 

@@ -133,3 +133,5 @@ class KeyboardController:
                 self._set_motion("boxing")
             elif key == "i":
                 self._set_motion("cone")
+            elif key == "o":
+                self._set_motion("walking_and_standing_unittest")
